@@ -13,7 +13,7 @@
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/82716b8e-2818-4161-8a88-c571df4369a5"
+      "url": "https://u.expo.dev/f4e68fbf-c40f-4a69-a5d1-888e25c53374"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -31,7 +31,11 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [],
-    "extra": {},
+    "extra": {
+      "eas": {
+        "projectId": "f4e68fbf-c40f-4a69-a5d1-888e25c53374"
+      }
+    },
     "runtimeVersion": {
       "policy": "sdkVersion"
     }
