@@ -10,6 +10,8 @@ module.exports = function (api) {
             "@": "./src",
           },
         },
+        "nativewind/babel",
+        "module:react-native-dotenv",
       ],
     ],
   };

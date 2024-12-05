@@ -1,5 +1,5 @@
 import React from "react";
-import { Welcome } from "./Welcome";
+import Onboarding1 from "./Welcome";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/Navigation";
 import { RootScreens } from "..";
@@ -16,5 +16,5 @@ export const WelcomeContainer = ({
     navigation.navigate(screen);
   };
 
-  return <Welcome onNavigate={onNavigate} />;
+  return <Onboarding1 />;
 };
