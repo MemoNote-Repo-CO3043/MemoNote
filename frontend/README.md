@@ -1,58 +1,50 @@
-# React Native Expo Redux Template
-[![NPM Version](https://img.shields.io/npm/v/react-native-expo-redux-template)](https://www.npmjs.com/package/react-native-expo-redux-template)
-[![Build Expo OTA](https://github.com/hpccbk/react-native-expo-redux-template/actions/workflows/update.yml/badge.svg)](https://github.com/hpccbk/react-native-expo-redux-template/actions/workflows/update.yml)
+# Welcome to your Expo app 👋
 
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-This is a template for building React Native apps with the Expo framework and Redux for state management. It includes a basic file structure and configuration for setting up a Redux store, along with some example actions and reducers.
+## Get started
 
-## Getting Started
+1. Install dependencies
 
-To use this template, you should have the Expo CLI installed on your system. You can install it globally using npm:
+   ```bash
+   npm install
+   ```
+
+2. Start the app
+
+   ```bash
+    npx expo start
+   ```
+
+In the output, you'll find options to open the app in a
+
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Get a fresh project
+
+When you're ready, run:
 
 ```bash
-npm install -g expo-cli
+npm run reset-project
 ```
 
-To create a new project using this template, please clone this repository. Then run:
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-```bash
-yarn install
-```
+## Learn more
 
-## File Structure
+To learn more about developing your project with Expo, look at the following resources:
 
-The template's file structure is organized as follows:
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-- `src/`: This folder contains the source code for the template, organized into sub-folders as follows:
+## Join the community
 
-  - `Components/`: This folder contains reusable components for the app.
+Join our community of developers creating universal apps.
 
-  - `Config/`: This folder contains configuration files for the app, such as API endpoints, environment settings, and theme configuration.
-
-  - `Hooks/`: This folder contains Redux and custom hooks for the app.
-
-  - `Localization/`: This folder contains localization files for the app, allowing for easy translation to different languages.
-
-  - `Navigation/`: This folder contains navigation files for the app, such as stack navigation, drawer navigation, or tab navigation.
-
-  - `Screens/`: This folder contains the main screens of the app.
-
-  - `Services/`: This folder contains service files for the app, such as API calls or Firebase integration.
-
-  - `Store/`: This folder contains Redux-related files, including the store configuration and reducers.
-
-  - `Theme/`: This folder contains files related to the app's visual theme, such as colors, typography, and spacing.
-
-## Known Issues
-
-```js
-ApiV2Error: Not Authorized.
-```
-Reason and how to remove this issue: https://github.com/expo/expo-cli/issues/2436#issuecomment-1308534521
-
-
-## Contributing
-
-If you have suggestions for how this template could be improved, or want to report a bug, please open an issue or a pull request. We welcome contributions from the community!
-
-
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
