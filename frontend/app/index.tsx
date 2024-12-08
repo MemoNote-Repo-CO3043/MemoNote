@@ -1,3 +1,4 @@
+import { Picker } from "@react-native-picker/picker";
 import {
   CameraType,
   CameraView,
@@ -29,6 +30,7 @@ export default function CameraNoteApp() {
   const [note, setNote] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const [selectedOption, setSelectedOption] = useState("ALL");
 
   // Comprehensive permission request for Android 13
   const requestAllPermissions = async () => {
@@ -195,23 +197,70 @@ export default function CameraNoteApp() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
-      <Text className="text-black bg-white text-3xl font-bold text-center
-      h-[36px] flex align-middle items-start">
+    <SafeAreaView className="flex-1 bg-white">
+      <Text
+        className="text-black bg-white text-3xl font-bold text-center
+      h-[5%] flex align-middle items-start"
+      >
         Recording
       </Text>
-      <CameraView
-        style={styles.camera}
-        facing={facing}
-        ref={cameraRef}
-        ratio="1:1"
-        mode="video"
-      ></CameraView>
+      <View className="h-[65%] w-full">
+        <CameraView
+          className="w-full h-full"
+          style={{
+            flex: 1,
+          }}
+          facing={facing}
+          ref={cameraRef}
+          ratio="1:1"
+          videoQuality="1080p"
+          mode="video"
+        />
+        <TouchableOpacity
+          className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 
+            size-24 rounded-full flex items-center 
+            justify-center border-8 border-[#e2e2e2] ${
+              isRecording ? "bg-red-500" : "bg-white"
+            }`}
+          onPress={handleRecordPress}
+        />
+      </View>
 
       <KeyboardAvoidingView
+        className="w-full h-[30%]"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.noteContainer}
       >
+        <View className="w-full py-0 bg-yellow-300 flex flex-row justify-between">
+          <TouchableOpacity
+            className="w-28 bg-primary rounded-lg flex justify-center items-center"
+            onPress={() => {
+              /* your handler */
+            }}
+          >
+            <Text className="text-base font-semibold text-white">NOTE</Text>
+          </TouchableOpacity>
+          <Picker
+            mode="dropdown"
+            selectedValue={selectedOption}
+            onValueChange={(itemValue) => setSelectedOption(itemValue)}
+            style={{
+              width: "48%",
+              height: 50,
+              padding: 0,
+              backgroundColor: "#0B963E",
+              color: "white",
+            }}
+            itemStyle={{ height: 45 }}
+          >
+            <Picker.Item label="ALL" value="ALL" />
+            <Picker.Item label="URGENT" value="URGENT" />
+            <Picker.Item label="IMPORTANT" value="IMPORTANT" />
+            <Picker.Item label="EXAM" value="EXAM" />
+            <Picker.Item label="RESEARCH" value="RESEARCH" />
+          </Picker>
+        </View>
+
         <TextInput
           style={styles.input}
           placeholder="Write a note..."
@@ -220,16 +269,6 @@ export default function CameraNoteApp() {
           multiline={true}
           numberOfLines={3}
         />
-
-        <TouchableOpacity
-          className="p-2.5 items-center my-1.5 rounded-md"
-          style={[{ backgroundColor: isRecording ? "red" : "blue" }]}
-          onPress={handleRecordPress}
-        >
-          <Text className="text-white font-bold">
-            {isRecording ? "Stop Recording" : "Start Recording"}
-          </Text>
-        </TouchableOpacity>
 
         <TouchableOpacity
           className="bg-blue-900 p-2.5 items-center my-1.5 rounded-md"
@@ -243,11 +282,6 @@ export default function CameraNoteApp() {
 }
 
 const styles = StyleSheet.create({
-  camera: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
   buttonContainer: {
     flexDirection: "row",
     backgroundColor: "transparent",
