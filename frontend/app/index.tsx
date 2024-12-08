@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import "../global.css";
 
 export default function CameraNoteApp() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -194,12 +195,16 @@ export default function CameraNoteApp() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-black">
+      <Text className="text-black bg-white text-3xl font-bold text-center
+      h-[36px] flex align-middle items-start">
+        Recording
+      </Text>
       <CameraView
         style={styles.camera}
         facing={facing}
         ref={cameraRef}
-        ratio="16:9"
+        ratio="1:1"
         mode="video"
       ></CameraView>
 
@@ -217,19 +222,20 @@ export default function CameraNoteApp() {
         />
 
         <TouchableOpacity
-          style={[
-            styles.button,
-            { backgroundColor: isRecording ? "red" : "blue" },
-          ]}
+          className="p-2.5 items-center my-1.5 rounded-md"
+          style={[{ backgroundColor: isRecording ? "red" : "blue" }]}
           onPress={handleRecordPress}
         >
-          <Text style={styles.buttonText}>
+          <Text className="text-white font-bold">
             {isRecording ? "Stop Recording" : "Start Recording"}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={saveNote}>
-          <Text style={styles.buttonText}>Save Note</Text>
+        <TouchableOpacity
+          className="bg-blue-900 p-2.5 items-center my-1.5 rounded-md"
+          onPress={saveNote}
+        >
+          <Text className="text-white font-bold">Save Note</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -237,10 +243,6 @@ export default function CameraNoteApp() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "black",
-  },
   camera: {
     flex: 1,
     justifyContent: "flex-end",
@@ -277,9 +279,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 5,
     borderRadius: 5,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
   },
 });
