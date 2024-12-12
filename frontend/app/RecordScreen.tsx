@@ -1,4 +1,3 @@
-import { Picker } from "@react-native-picker/picker";
 import {
   CameraType,
   CameraView,
@@ -15,11 +14,12 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Button } from "react-native-paper";
 import "../global.css";
+import DropdownComponent from "./components/DropdownComponent";
 
 export default function CameraNoteApp() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -27,10 +27,8 @@ export default function CameraNoteApp() {
   const [mediaPermission, requestMediaPermission] =
     MediaLibrary.usePermissions();
   const [audioPermission, requestAudioPermission] = useMicrophonePermissions();
-  const [note, setNote] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<CameraView>(null);
-  const [selectedOption, setSelectedOption] = useState("ALL");
 
   // Comprehensive permission request for Android 13
   const requestAllPermissions = async () => {
@@ -171,18 +169,6 @@ export default function CameraNoteApp() {
     }
   };
 
-  // Save note function
-  const saveNote = () => {
-    if (note.trim()) {
-      Alert.alert("Note Saved", note);
-      console.log("Note saved:", note);
-      // Here you could implement actual note saving logic
-      // For example, storing in AsyncStorage or sending to a backend
-    } else {
-      Alert.alert("Empty Note", "Please write something before saving");
-    }
-  };
-
   // If permissions are not granted, return null
   if (
     !cameraPermission?.granted ||
@@ -228,54 +214,22 @@ export default function CameraNoteApp() {
 
       <KeyboardAvoidingView
         className="w-full h-[30%]"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.noteContainer}
       >
-        <View className="w-full py-0 bg-yellow-300 flex flex-row justify-between">
-          <TouchableOpacity
-            className="w-28 bg-primary rounded-lg flex justify-center items-center"
-            onPress={() => {
-              /* your handler */
-            }}
+        <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
+          <Button
+            labelStyle={{ fontSize: 17, marginTop: 8 }}
+            mode="contained"
+            buttonColor="#0B963E"
+            textColor="white"
+            onPress={() => {}}
+            icon="plus"
+            className="w-28 h-10"
           >
-            <Text className="text-base font-semibold text-white">NOTE</Text>
-          </TouchableOpacity>
-          <Picker
-            mode="dropdown"
-            selectedValue={selectedOption}
-            onValueChange={(itemValue) => setSelectedOption(itemValue)}
-            style={{
-              width: "48%",
-              height: 50,
-              padding: 0,
-              backgroundColor: "#0B963E",
-              color: "white",
-            }}
-            itemStyle={{ height: 45 }}
-          >
-            <Picker.Item label="ALL" value="ALL" />
-            <Picker.Item label="URGENT" value="URGENT" />
-            <Picker.Item label="IMPORTANT" value="IMPORTANT" />
-            <Picker.Item label="EXAM" value="EXAM" />
-            <Picker.Item label="RESEARCH" value="RESEARCH" />
-          </Picker>
+            NOTE
+          </Button>
+          <DropdownComponent />
         </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Write a note..."
-          value={note}
-          onChangeText={setNote}
-          multiline={true}
-          numberOfLines={3}
-        />
-
-        <TouchableOpacity
-          className="bg-blue-900 p-2.5 items-center my-1.5 rounded-md"
-          onPress={saveNote}
-        >
-          <Text className="text-white font-bold">Save Note</Text>
-        </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -296,7 +250,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: "100%",
-    padding: 20,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
   },
   input: {
