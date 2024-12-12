@@ -14,6 +14,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -29,6 +30,12 @@ export default function CameraNoteApp() {
   const [audioPermission, requestAudioPermission] = useMicrophonePermissions();
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const [isNoteVisible, setIsNoteVisible] = useState(false);
+  const [noteText, setNoteText] = useState("");
+
+  const toggleInput = () => {
+    setIsNoteVisible(!isNoteVisible);
+  };
 
   // Comprehensive permission request for Android 13
   const requestAllPermissions = async () => {
@@ -126,6 +133,7 @@ export default function CameraNoteApp() {
             .then(async (video) => {
               setIsRecording(false);
               if (video && video.uri) {
+                console.log("In handleRecordPress");
                 await saveVideo(video.uri);
               }
             })
@@ -145,6 +153,7 @@ export default function CameraNoteApp() {
 
   // Save video to media library (enhanced)
   const saveVideo = async (uri: string) => {
+    console.log("In saveVideo");
     try {
       // Ensure all permissions are granted
       const permissionsGranted = await requestAllPermissions();
@@ -202,34 +211,79 @@ export default function CameraNoteApp() {
           videoQuality="1080p"
           mode="video"
         />
-        <TouchableOpacity
-          className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 
+        {!isNoteVisible && (
+          <TouchableOpacity
+            className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 
             size-24 rounded-full flex items-center 
             justify-center border-8 border-[#e2e2e2] ${
               isRecording ? "bg-red-500" : "bg-white"
             }`}
-          onPress={handleRecordPress}
-        />
+            onPress={handleRecordPress}
+          />
+        )}
       </View>
-
       <KeyboardAvoidingView
         className="w-full h-[30%]"
         style={styles.noteContainer}
       >
-        <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
-          <Button
-            labelStyle={{ fontSize: 17, marginTop: 8 }}
-            mode="contained"
-            buttonColor="#0B963E"
-            textColor="white"
-            onPress={() => {}}
-            icon="plus"
-            className="w-28 h-10"
-          >
-            NOTE
-          </Button>
-          <DropdownComponent />
-        </View>
+        {!isNoteVisible && (
+          <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
+            <Button
+              labelStyle={{ fontSize: 17, marginTop: 8 }}
+              mode="contained"
+              buttonColor="#0B963E"
+              textColor="white"
+              onPress={toggleInput}
+              icon="plus"
+              className="w-28 h-10"
+            >
+              NOTE
+            </Button>
+            <DropdownComponent />
+          </View>
+        )}
+        {isNoteVisible && (
+          <View className="px-3 py-2">
+            <TextInput
+              className="h-20 px-2 bg-white rounded-md border border-gray-300"
+              placeholder="Write your note here..."
+              value={noteText}
+              onChangeText={setNoteText}
+              autoFocus
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+            <View className="flex-row justify-around space-x-2 mt-2">
+              <Button
+                labelStyle={{ fontSize: 16 }}
+                mode="contained"
+                buttonColor="#0B963E"
+                textColor="white"
+                onPress={() => {
+                  alert("Note saved: " + noteText);
+                  setIsNoteVisible(false);
+                  setNoteText("");
+                }}
+                className="w-44"
+              >
+                UPDATE
+              </Button>
+              <Button
+                labelStyle={{ fontSize: 16 }}
+                textColor="black"
+                mode="outlined"
+                onPress={() => {
+                  setIsNoteVisible(false);
+                  setNoteText("");
+                }}
+                className="w-44"
+              >
+                CANCEL
+              </Button>
+            </View>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
