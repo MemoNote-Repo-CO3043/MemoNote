@@ -133,7 +133,6 @@ export default function CameraNoteApp() {
             .then(async (video) => {
               setIsRecording(false);
               if (video && video.uri) {
-                console.log("In handleRecordPress");
                 await saveVideo(video.uri);
               }
             })
@@ -153,7 +152,6 @@ export default function CameraNoteApp() {
 
   // Save video to media library (enhanced)
   const saveVideo = async (uri: string) => {
-    console.log("In saveVideo");
     try {
       // Ensure all permissions are granted
       const permissionsGranted = await requestAllPermissions();
@@ -165,10 +163,9 @@ export default function CameraNoteApp() {
       let album = await MediaLibrary.getAlbumAsync("MemoNote");
       if (!album) {
         album = await MediaLibrary.createAlbumAsync("MemoNote", asset);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
       }
-
-      // Save the video to the album
-      await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
 
       Alert.alert("Success", "Video saved to MemoNote album");
       console.log("Video saved:", uri);
