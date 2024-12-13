@@ -36,6 +36,8 @@ export default function CameraNoteApp() {
   const cameraRef = useRef<CameraView>(null);
   const [isNoteVisible, setIsNoteVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [timer, setTimer] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleInput = () => {
     setIsNoteVisible(!isNoteVisible);
@@ -137,6 +139,11 @@ export default function CameraNoteApp() {
           // Start recording
           setIsRecording(true);
 
+          setTimer(0);
+          timerRef.current = setInterval(() => {
+            setTimer((prevTimer) => prevTimer + 1);
+          }, 1000);
+
           await cameraRef.current
             .recordAsync()
             .then(async (video) => {
@@ -157,6 +164,22 @@ export default function CameraNoteApp() {
         Alert.alert("Recording Error", "Failed to record video");
       }
     }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds
+    ).padStart(2, "0")}`;
   };
 
   // Save video to media library
@@ -206,8 +229,14 @@ export default function CameraNoteApp() {
             handleRecordPress={handleRecordPress}
           />
         )}
+        {isRecording && (
+          <View className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+            <Text className="text-white text-3xl">{formatTime(timer)}</Text>
+          </View>
+        )}
       </View>
       <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="w-full h-[30%]"
         style={styles.noteContainer}
       >
@@ -227,7 +256,7 @@ export default function CameraNoteApp() {
               </Button>
               <DropdownComponent />
             </View>
-            <ScrollView className="h-full">
+            <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
               {noteList.map((item) => (
                 <NoteItem
                   key={item.id}
@@ -293,35 +322,10 @@ export default function CameraNoteApp() {
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 16,
-  },
-  cameraToggleButton: {
-    backgroundColor: "rgba(255,255,255,0.5)",
-    padding: 10,
-    borderRadius: 5,
-  },
   noteContainer: {
     position: "absolute",
     bottom: 0,
     width: "100%",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
-  },
-  input: {
-    height: 80,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    textAlignVertical: "top",
-  },
-  button: {
-    backgroundColor: "blue",
-    padding: 10,
-    alignItems: "center",
-    marginVertical: 5,
-    borderRadius: 5,
   },
 });
