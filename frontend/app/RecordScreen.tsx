@@ -8,7 +8,6 @@ import * as MediaLibrary from "expo-media-library";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
-  KeyboardAvoidingView,
   PermissionsAndroid,
   Platform,
   SafeAreaView,
@@ -23,7 +22,6 @@ import "../global.css";
 import DropdownComponent from "./components/DropdownComponent";
 import NoteItem from "./components/NoteItem";
 import RecordButton from "./components/RecordButton";
-import noteList from "./dummy-data/noteList";
 import saveVideoToAlbum from "./utils/mediaLibrary";
 
 export default function CameraNoteApp() {
@@ -39,7 +37,7 @@ export default function CameraNoteApp() {
   const [timer, setTimer] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedBookmark, setSelectedBookmark] = useState<string>("ALL");
-  const [notes, setNotes] = useState(noteList);
+  const [notes, setNotes] = useState([]);
 
   const toggleInput = () => {
     setIsNoteVisible(!isNoteVisible);
@@ -219,7 +217,7 @@ export default function CameraNoteApp() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="h-full bg-white">
       <Text
         className="text-black bg-white text-3xl font-bold text-center
       h-[5%] flex align-middle items-start"
@@ -250,84 +248,78 @@ export default function CameraNoteApp() {
           </View>
         )}
       </View>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="w-full h-[30%]"
-        style={styles.noteContainer}
-      >
-        {!isNoteVisible && (
-          <View>
-            <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
-              <Button
-                labelStyle={{ fontSize: 17, marginTop: 8 }}
-                mode="contained"
-                buttonColor="#0B963E"
-                textColor="white"
-                onPress={toggleInput}
-                icon="plus"
-                className="w-28 h-10"
-              >
-                NOTE
-              </Button>
-              <DropdownComponent onSelect={setSelectedBookmark} />
-            </View>
-            <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
-              {notes.map((item) => (
-                <NoteItem
-                  key={item.id}
-                  second={item.second}
-                  bookmark={item.bookmark}
-                  text={item.text}
-                  id={item.id}
-                  openEditNote={openEditNote}
-                  openDeleteNote={() => {}}
-                />
-              ))}
-            </ScrollView>
+      {!isNoteVisible && (
+        <View className="w-full h-[30%]" style={{ flex: 1 }}>
+          <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
+            <Button
+              labelStyle={{ fontSize: 17, marginTop: 8 }}
+              mode="contained"
+              buttonColor="#0B963E"
+              textColor="white"
+              onPress={toggleInput}
+              icon="plus"
+              className="w-28 h-10"
+            >
+              NOTE
+            </Button>
+            <DropdownComponent onSelect={setSelectedBookmark} />
           </View>
-        )}
-        {isNoteVisible && (
-          <View className="px-3 py-2">
-            <TextInput
-              className="h-20 px-2 bg-white rounded-md border border-gray-300"
-              placeholder="Write your note here..."
-              value={noteText}
-              onChangeText={setNoteText}
-              autoFocus
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              style={{ backgroundColor: "#EEE" }}
-            />
-            <View className="flex-row justify-around space-x-2 mt-3">
-              <Button
-                labelStyle={{ fontSize: 16 }}
-                mode="contained"
-                buttonColor="#0B963E"
-                textColor="white"
-                onPress={handleSaveNote}
-                className="w-44"
-                style={{ borderRadius: 8 }}
-              >
-                UPDATE
-              </Button>
-              <Button
-                labelStyle={{ fontSize: 16 }}
-                textColor="black"
-                mode="outlined"
-                onPress={() => {
-                  setIsNoteVisible(false);
-                  setNoteText("");
-                }}
-                className="w-44"
-                style={{ borderRadius: 8, borderColor: "#BDBDBD" }}
-              >
-                CANCEL
-              </Button>
-            </View>
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            {notes.map((item) => (
+              <NoteItem
+                key={item.id}
+                second={item.second}
+                bookmark={item.bookmark}
+                text={item.text}
+                id={item.id}
+                openEditNote={openEditNote}
+                openDeleteNote={() => {}}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      )}
+      {isNoteVisible && (
+        <View className="px-3 py-2">
+          <TextInput
+            className="h-20 px-2 bg-white rounded-md border border-gray-300"
+            placeholder="Write your note here..."
+            value={noteText}
+            onChangeText={setNoteText}
+            autoFocus
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            style={{ backgroundColor: "#EEE" }}
+          />
+          <View className="flex-row justify-around space-x-2 mt-3">
+            <Button
+              labelStyle={{ fontSize: 16 }}
+              mode="contained"
+              buttonColor="#0B963E"
+              textColor="white"
+              onPress={handleSaveNote}
+              className="w-44"
+              style={{ borderRadius: 8 }}
+            >
+              UPDATE
+            </Button>
+            <Button
+              labelStyle={{ fontSize: 16 }}
+              textColor="black"
+              mode="outlined"
+              onPress={() => {
+                setIsNoteVisible(false);
+                setNoteText("");
+              }}
+              className="w-44"
+              style={{ borderRadius: 8, borderColor: "#BDBDBD" }}
+            >
+              CANCEL
+            </Button>
           </View>
-        )}
-      </KeyboardAvoidingView>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
