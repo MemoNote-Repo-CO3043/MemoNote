@@ -38,6 +38,8 @@ export default function CameraNoteApp() {
   const [noteText, setNoteText] = useState("");
   const [timer, setTimer] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [selectedBookmark, setSelectedBookmark] = useState<string>("ALL");
+  const [notes, setNotes] = useState(noteList);
 
   const toggleInput = () => {
     setIsNoteVisible(!isNoteVisible);
@@ -182,6 +184,19 @@ export default function CameraNoteApp() {
     ).padStart(2, "0")}`;
   };
 
+  const handleSaveNote = () => {
+    const newNote = {
+      second: timer,
+      bookmark: selectedBookmark,
+      text: noteText,
+      id: notes.length + 1,
+    };
+    console.log(newNote);
+    setNotes([...notes, newNote]);
+    setIsNoteVisible(false);
+    setNoteText("");
+  };
+
   // Save video to media library
   const handleSaveVideo = async (uri: string) => {
     const permissionsGranted = await requestAllPermissions();
@@ -254,10 +269,10 @@ export default function CameraNoteApp() {
               >
                 NOTE
               </Button>
-              <DropdownComponent />
+              <DropdownComponent onSelect={setSelectedBookmark} />
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
-              {noteList.map((item) => (
+              {notes.map((item) => (
                 <NoteItem
                   key={item.id}
                   second={item.second}
@@ -290,11 +305,7 @@ export default function CameraNoteApp() {
                 mode="contained"
                 buttonColor="#0B963E"
                 textColor="white"
-                onPress={() => {
-                  alert("Note saved: " + noteText);
-                  setIsNoteVisible(false);
-                  setNoteText("");
-                }}
+                onPress={handleSaveNote}
                 className="w-44"
                 style={{ borderRadius: 8 }}
               >

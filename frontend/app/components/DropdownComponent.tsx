@@ -10,9 +10,16 @@ const data = [
   { label: "EXAM", value: "EXAM" },
   { label: "RESEARCH", value: "RESEARCH" },
 ];
-
-const DropdownComponent = () => {
+interface DropdownComponentProps {
+  onSelect: (value: string) => void;
+}
+const DropdownComponent: React.FC<DropdownComponentProps> = ({ onSelect }) => {
   const [value, setValue] = useState<string | null>(null);
+
+  const handleSelect = (item: Item) => {
+    setValue(item.value);
+    onSelect(item.value);
+  };
 
   interface Item {
     label: string;
@@ -38,9 +45,7 @@ const DropdownComponent = () => {
       placeholderStyle={{ color: "white" }}
       value={value}
       iconColor="white"
-      onChange={(item) => {
-        setValue(item.value);
-      }}
+      onChange={handleSelect}
       renderLeftIcon={() => (
         <IconButton
           style={styles.icon}
