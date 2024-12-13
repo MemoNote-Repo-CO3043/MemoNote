@@ -3,13 +3,17 @@ import { Alert } from "react-native";
 
 const saveVideoToAlbum = async (uri: string) => {
   try {
-    const asset = await MediaLibrary.createAssetAsync(uri);
+    const video_asset = await MediaLibrary.createAssetAsync(uri);
 
     let album = await MediaLibrary.getAlbumAsync("MemoNote");
     if (!album) {
-      album = await MediaLibrary.createAlbumAsync("MemoNote", asset);
+      album = await MediaLibrary.createAlbumAsync("MemoNote", video_asset);
     } else {
-      await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      await MediaLibrary.addAssetsToAlbumAsync(
+        [video_asset],
+        album,
+        false
+      );
     }
 
     Alert.alert("Success", "Video saved to MemoNote album");

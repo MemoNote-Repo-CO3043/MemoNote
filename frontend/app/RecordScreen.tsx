@@ -12,14 +12,13 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Button } from "react-native-paper";
 import "../global.css";
 import DropdownComponent from "./components/DropdownComponent";
+import NoteInput from "./components/NoteInput";
 import NoteItem from "./components/NoteItem";
 import RecordButton from "./components/RecordButton";
 import saveVideoToAlbum from "./utils/mediaLibrary";
@@ -32,20 +31,22 @@ export default function CameraNoteApp() {
   const [audioPermission, requestAudioPermission] = useMicrophonePermissions();
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<CameraView>(null);
-  const [isNoteVisible, setIsNoteVisible] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [timer, setTimer] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedBookmark, setSelectedBookmark] = useState<string>("ALL");
   const [notes, setNotes] = useState([]);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
 
   const toggleInput = () => {
-    setIsNoteVisible(!isNoteVisible);
+    setIsTyping(!isTyping);
   };
 
-  const openEditNote = (text: string) => {
-    setIsNoteVisible(!isNoteVisible);
+  const openEditNote = (text: string, id: number) => {
     setNoteText(text);
+    setEditingNoteId(id);
+    setIsTyping(true);
   };
 
   // Comprehensive permission request for Android 13
@@ -148,6 +149,12 @@ export default function CameraNoteApp() {
             .recordAsync()
             .then(async (video) => {
               setIsRecording(false);
+
+              if (timerRef.current !== null) {
+                clearInterval(timerRef.current);
+              }
+              setTimer(0);
+
               if (video && video.uri) {
                 await handleSaveVideo(video.uri);
               }
@@ -174,6 +181,12 @@ export default function CameraNoteApp() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isRecording) {
+      console.log("NOTE LOG:", notes);
+    }
+  }, [isRecording, notes]);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -183,16 +196,33 @@ export default function CameraNoteApp() {
   };
 
   const handleSaveNote = () => {
-    const newNote = {
-      second: timer,
-      bookmark: selectedBookmark,
-      text: noteText,
-      id: notes.length + 1,
-    };
-    console.log(newNote);
-    setNotes([...notes, newNote]);
-    setIsNoteVisible(false);
+    if (editingNoteId !== null) {
+      // Edit existing note
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note.id === editingNoteId
+            ? { ...note, text: noteText, bookmark: selectedBookmark }
+            : note
+        )
+      );
+    } else {
+      // Add new note
+      const newNote = {
+        second: timer,
+        bookmark: selectedBookmark,
+        text: noteText,
+        id: notes.length + 1,
+      };
+      console.log(newNote);
+      setNotes((prevNotes) => [...prevNotes, newNote]);
+    }
+    setIsTyping(false);
     setNoteText("");
+    setEditingNoteId(null);
+  };
+
+  const handleDeleteNote = (id: number) => {
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== id));
   };
 
   // Save video to media library
@@ -236,7 +266,7 @@ export default function CameraNoteApp() {
           videoQuality="1080p"
           mode="video"
         />
-        {!isNoteVisible && (
+        {!isTyping && (
           <RecordButton
             isRecording={isRecording}
             handleRecordPress={handleRecordPress}
@@ -248,7 +278,7 @@ export default function CameraNoteApp() {
           </View>
         )}
       </View>
-      {!isNoteVisible && (
+      {!isTyping && (
         <View className="w-full h-[30%]" style={{ flex: 1 }}>
           <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
             <Button
@@ -272,63 +302,21 @@ export default function CameraNoteApp() {
                 bookmark={item.bookmark}
                 text={item.text}
                 id={item.id}
-                openEditNote={openEditNote}
-                openDeleteNote={() => {}}
+                openEditNote={(text) => openEditNote(text, item.id)}
+                openDeleteNote={handleDeleteNote}
               />
             ))}
           </ScrollView>
         </View>
       )}
-      {isNoteVisible && (
-        <View className="px-3 py-2">
-          <TextInput
-            className="h-20 px-2 bg-white rounded-md border border-gray-300"
-            placeholder="Write your note here..."
-            value={noteText}
-            onChangeText={setNoteText}
-            autoFocus
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            style={{ backgroundColor: "#EEE" }}
-          />
-          <View className="flex-row justify-around space-x-2 mt-3">
-            <Button
-              labelStyle={{ fontSize: 16 }}
-              mode="contained"
-              buttonColor="#0B963E"
-              textColor="white"
-              onPress={handleSaveNote}
-              className="w-44"
-              style={{ borderRadius: 8 }}
-            >
-              UPDATE
-            </Button>
-            <Button
-              labelStyle={{ fontSize: 16 }}
-              textColor="black"
-              mode="outlined"
-              onPress={() => {
-                setIsNoteVisible(false);
-                setNoteText("");
-              }}
-              className="w-44"
-              style={{ borderRadius: 8, borderColor: "#BDBDBD" }}
-            >
-              CANCEL
-            </Button>
-          </View>
-        </View>
+      {isTyping && (
+        <NoteInput
+          noteText={noteText}
+          setNoteText={setNoteText}
+          setIsTyping={setIsTyping}
+          handleSaveNote={handleSaveNote}
+        />
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  noteContainer: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-  },
-});
