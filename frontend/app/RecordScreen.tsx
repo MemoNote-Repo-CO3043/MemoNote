@@ -12,15 +12,19 @@ import {
   PermissionsAndroid,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Button } from "react-native-paper";
 import "../global.css";
 import DropdownComponent from "./components/DropdownComponent";
+import NoteItem from "./components/NoteItem";
+import RecordButton from "./components/RecordButton";
+import noteList from "./dummy-data/noteList";
+import saveVideoToAlbum from "./utils/mediaLibrary";
 
 export default function CameraNoteApp() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -35,6 +39,11 @@ export default function CameraNoteApp() {
 
   const toggleInput = () => {
     setIsNoteVisible(!isNoteVisible);
+  };
+
+  const openEditNote = (text: string) => {
+    setIsNoteVisible(!isNoteVisible);
+    setNoteText(text);
   };
 
   // Comprehensive permission request for Android 13
@@ -133,7 +142,7 @@ export default function CameraNoteApp() {
             .then(async (video) => {
               setIsRecording(false);
               if (video && video.uri) {
-                await saveVideo(video.uri);
+                await handleSaveVideo(video.uri);
               }
             })
             .catch((error) => {
@@ -150,29 +159,12 @@ export default function CameraNoteApp() {
     }
   };
 
-  // Save video to media library (enhanced)
-  const saveVideo = async (uri: string) => {
-    try {
-      // Ensure all permissions are granted
-      const permissionsGranted = await requestAllPermissions();
-      if (!permissionsGranted) return;
+  // Save video to media library
+  const handleSaveVideo = async (uri: string) => {
+    const permissionsGranted = await requestAllPermissions();
+    if (!permissionsGranted) return;
 
-      const asset = await MediaLibrary.createAssetAsync(uri);
-
-      // Create album if it doesn't exist
-      let album = await MediaLibrary.getAlbumAsync("MemoNote");
-      if (!album) {
-        album = await MediaLibrary.createAlbumAsync("MemoNote", asset);
-      } else {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-      }
-
-      Alert.alert("Success", "Video saved to MemoNote album");
-      console.log("Video saved:", uri);
-    } catch (error) {
-      console.error("Failed to save video:", error);
-      Alert.alert("Save Error", "Could not save the video");
-    }
+    await saveVideoToAlbum(uri);
   };
 
   // If permissions are not granted, return null
@@ -209,13 +201,9 @@ export default function CameraNoteApp() {
           mode="video"
         />
         {!isNoteVisible && (
-          <TouchableOpacity
-            className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 
-            size-24 rounded-full flex items-center 
-            justify-center border-8 border-[#e2e2e2] ${
-              isRecording ? "bg-red-500" : "bg-white"
-            }`}
-            onPress={handleRecordPress}
+          <RecordButton
+            isRecording={isRecording}
+            handleRecordPress={handleRecordPress}
           />
         )}
       </View>
@@ -224,19 +212,34 @@ export default function CameraNoteApp() {
         style={styles.noteContainer}
       >
         {!isNoteVisible && (
-          <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
-            <Button
-              labelStyle={{ fontSize: 17, marginTop: 8 }}
-              mode="contained"
-              buttonColor="#0B963E"
-              textColor="white"
-              onPress={toggleInput}
-              icon="plus"
-              className="w-28 h-10"
-            >
-              NOTE
-            </Button>
-            <DropdownComponent />
+          <View>
+            <View className="w-full p-3 h-16 flex flex-row justify-between items-center border-b-2 border-gray-200">
+              <Button
+                labelStyle={{ fontSize: 17, marginTop: 8 }}
+                mode="contained"
+                buttonColor="#0B963E"
+                textColor="white"
+                onPress={toggleInput}
+                icon="plus"
+                className="w-28 h-10"
+              >
+                NOTE
+              </Button>
+              <DropdownComponent />
+            </View>
+            <ScrollView className="h-full">
+              {noteList.map((item) => (
+                <NoteItem
+                  key={item.id}
+                  second={item.second}
+                  bookmark={item.bookmark}
+                  text={item.text}
+                  id={item.id}
+                  openEditNote={openEditNote}
+                  openDeleteNote={() => {}}
+                />
+              ))}
+            </ScrollView>
           </View>
         )}
         {isNoteVisible && (
@@ -250,8 +253,9 @@ export default function CameraNoteApp() {
               multiline
               numberOfLines={3}
               textAlignVertical="top"
+              style={{ backgroundColor: "#EEE" }}
             />
-            <View className="flex-row justify-around space-x-2 mt-2">
+            <View className="flex-row justify-around space-x-2 mt-3">
               <Button
                 labelStyle={{ fontSize: 16 }}
                 mode="contained"
@@ -263,6 +267,7 @@ export default function CameraNoteApp() {
                   setNoteText("");
                 }}
                 className="w-44"
+                style={{ borderRadius: 8 }}
               >
                 UPDATE
               </Button>
@@ -275,6 +280,7 @@ export default function CameraNoteApp() {
                   setNoteText("");
                 }}
                 className="w-44"
+                style={{ borderRadius: 8, borderColor: "#BDBDBD" }}
               >
                 CANCEL
               </Button>

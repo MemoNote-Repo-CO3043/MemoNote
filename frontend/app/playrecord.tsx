@@ -1,18 +1,17 @@
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Entypo from "@expo/vector-icons/Entypo";
+import Feather from "@expo/vector-icons/Feather";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useVideoPlayer, VideoView } from "expo-video";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
   FlatList,
   ScrollView,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Link } from "expo-router";
-import { useVideoPlayer, VideoView } from "expo-video";
-import Feather from "@expo/vector-icons/Feather";
-import Entypo from "@expo/vector-icons/Entypo";
-import React, { useState } from "react";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import NoteItem from "./components/NoteItem";
 const noteList = [
   {
@@ -171,6 +170,7 @@ export default function PlayRecord() {
             id={item.id}
             onTimePress={seekAt}
             openEditNote={openEditNote}
+            openDeleteNote={() => {}}
           />
         ))}
       </ScrollView>
