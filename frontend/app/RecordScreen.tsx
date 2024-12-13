@@ -158,6 +158,8 @@ export default function CameraNoteApp() {
               if (video && video.uri) {
                 await handleSaveVideo(video.uri);
               }
+
+              setNotes([]);
             })
             .catch((error) => {
               console.error("Recording error:", error);
@@ -185,7 +187,7 @@ export default function CameraNoteApp() {
     if (!isRecording) {
       console.log("NOTE LOG:", notes);
     }
-  }, [isRecording, notes]);
+  }, [isRecording]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
