@@ -1,4 +1,4 @@
-const noteList = [
+const noteListDummy = [
   {
     second: 120,
     bookmark: "IMPORTANT",
@@ -30,4 +30,4 @@ const noteList = [
     id: 5,
   },
 ];
-export default noteList;
+export default noteListDummy;

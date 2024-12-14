@@ -13,44 +13,20 @@ import {
   View,
 } from "react-native";
 import NoteItem from "./components/NoteItem";
-const noteList = [
-  {
-    second: 120,
-    bookmark: "IMPORTANT",
-    text: "This is the first chapter of the book",
-    id: 1,
-  },
-  {
-    second: 150,
-    bookmark: "URGENT",
-    text: "This is the second chapter of the book",
-    id: 2,
-  },
-  {
-    second: 180,
-    bookmark: "RESEARCH",
-    text: "This is the third chapter of the book",
-    id: 3,
-  },
-  {
-    second: 300,
-    bookmark: "RESEARCH",
-    text: "This is the third chapter of the book",
-    id: 4,
-  },
-  {
-    second: 360,
-    bookmark: "RESEARCH",
-    text: "This is the third chapter of the book",
-    id: 5,
-  },
-];
+import { Alert } from "react-native";
+import noteListDummy from "./dummy-data/noteList";
+import NoteInput from "./components/NoteInput";
 const videoSource =
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 export default function PlayRecord() {
   const [isEdit, setIsEdit] = useState(false);
   const [textEdit, setTextEdit] = useState("");
+  const [filterNote, setFilterNote] = useState("ALL");
+  const [moreOption, setMoreOption] = useState(false);
+  const [noteList, setNoteList] = useState(noteListDummy);
+  const [isAddNote, setIsAddNote] = useState(false);
+  
   const player = useVideoPlayer(videoSource, (player) => {
     player.loop = false;
     player.play();
@@ -63,7 +39,24 @@ export default function PlayRecord() {
     setIsEdit(!isEdit);
     setTextEdit(text);
   };
-
+  const deleteVideo = () => {
+    Alert.alert(
+      "Delete video",
+      "Are you sure delete the video?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          // onPress: () => deleteVideo(videoId),
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const dropdownOptions = ["ALL", "URGENT", "IMPORTANT", "EXAM", "RESEARCH"];
   return (
@@ -81,15 +74,17 @@ export default function PlayRecord() {
         />
       </View>
       <View
-        className={`w-11/12 flex-row pb-3 pl-3 pt-1 ${
+        className={`flex-row pb-3 px-4 pt-1 ${
           isEdit ? "inset-0 bg-black opacity-50" : ""
         }`}
       >
         <View className="flex-1">
-          <Text className="text-2xl font-bold pb-2">Giải tích</Text>
+          <Text className="text-2xl font-bold pb-2 ml-auto">Giải tích</Text>
           <Text>12/12/2024 - 17:23</Text>
         </View>
-        <Feather name="more-horizontal" size={24} color="black" />
+        <TouchableOpacity onPress={() => setMoreOption(!moreOption)}>
+          <Feather name="more-horizontal" size={24} color="black" />
+        </TouchableOpacity>
       </View>
       <View
         className={`flex-row p-2 border-y border-zinc-300 justify-between items-center ${
@@ -106,9 +101,9 @@ export default function PlayRecord() {
           </TouchableOpacity>
         </View>
 
-        <View>
+        <View className="flex-1">
           <TouchableOpacity
-            className="flex-row items-center justify-center rounded-t-lg p-2"
+            className="flex-row w-3/5 p-2 items-center rounded-t-lg ml-auto"
             onPress={() => setDropdownVisible(!isDropdownVisible)}
             style={{
               backgroundColor: isDropdownVisible ? "white" : "#0B963E",
@@ -124,12 +119,12 @@ export default function PlayRecord() {
               }}
             />
             <Text
-              className="text-white font-semibold pl-4 pr-16"
+              className="text-white font-semibold ms-2"
               style={{
                 color: isDropdownVisible ? "#0B963E" : "white",
               }}
             >
-              ALL
+              {filterNote}
             </Text>
             {isDropdownVisible ? (
               <AntDesign
@@ -138,18 +133,30 @@ export default function PlayRecord() {
                 style={{
                   color: "#0B963E",
                 }}
+                className="ml-auto"
               />
             ) : (
-              <AntDesign name="down" size={20} color="white" />
+              <AntDesign
+                name="down"
+                size={20}
+                color="white"
+                className="ml-auto"
+              />
             )}
           </TouchableOpacity>
 
           {isDropdownVisible && (
-            <View className="absolute top-9 bg-white border border-zinc-300 z-50">
+            <View className="absolute w-3/5 top-10 right-0 bg-white border border-zinc-300 z-50">
               <FlatList
                 data={dropdownOptions}
                 renderItem={({ item }) => (
-                  <TouchableOpacity className="flex-row items-center p-2 pr-10 border-b border-zinc-300">
+                  <TouchableOpacity
+                    className="flex-row items-center p-2 border-b border-zinc-300"
+                    onPress={() => {
+                      setFilterNote(item);
+                      setDropdownVisible(!isDropdownVisible);
+                    }}
+                  >
                     <FontAwesome name="bookmark" size={20} color="#0B963E" />
                     <Text className="text-black pl-4">{item}</Text>
                   </TouchableOpacity>
@@ -160,28 +167,31 @@ export default function PlayRecord() {
           )}
         </View>
       </View>
-      <ScrollView className={` ${isEdit ? "inset-0 bg-black opacity-50" : ""}`}>
-        {noteList.map((item) => (
-          <NoteItem
-            key={item.id}
-            second={item.second}
-            bookmark={item.bookmark}
-            text={item.text}
-            id={item.id}
-            onTimePress={seekAt}
-            openEditNote={openEditNote}
-            openDeleteNote={() => {}}
-          />
-        ))}
+      <ScrollView className={`${isEdit ? "inset-0 bg-black opacity-50" : ""}`}>
+        {noteList
+          .filter((item) => filterNote === "ALL" || item.bookmark == filterNote)
+          .map((item) => (
+            <NoteItem
+              key={item.id}
+              second={item.second}
+              bookmark={item.bookmark}
+              text={item.text}
+              id={item.id}
+              onTimePress={seekAt}
+              openEditNote={openEditNote}
+            />
+          ))}
       </ScrollView>
       {isEdit && (
-        <View className="justify-center items-center p-4">
+        <View className="bg-white justify-center items-center p-4 pb-8">
           <TextInput
-            className="border p-2 mb-4 w-full border-zinc-300 rounded-lg text-gray-700"
+            className="border h-20 p-2 mb-4 w-full border-zinc-300 rounded-lg text-gray-700"
             value={textEdit}
             onChangeText={setTextEdit}
             multiline
             autoFocus={true}
+            numberOfLines={3}
+            textAlignVertical="top"
           />
 
           <View className="flex-row">
@@ -200,6 +210,19 @@ export default function PlayRecord() {
               <Text className="text-black">CANCEL</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      )}
+      {moreOption && (
+        <View className="w-full bg-white-500 p-4">
+          <TouchableOpacity className="p-2">
+            <Text>Share video</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="p-2">
+            <Text>Change name</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="p-2" onPress={deleteVideo}>
+            <Text>Delete video</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>

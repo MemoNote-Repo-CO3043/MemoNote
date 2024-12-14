@@ -15,8 +15,6 @@ const saveVideoToAlbum = async (uri: string) => {
         false
       );
     }
-
-    Alert.alert("Success", "Video saved to MemoNote album");
     console.log("Video saved:", uri);
   } catch (error) {
     Alert.alert("Error", "Failed to save video");
