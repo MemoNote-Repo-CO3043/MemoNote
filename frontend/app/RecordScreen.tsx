@@ -340,7 +340,12 @@ export default function CameraNoteApp() {
         </View>
       ) : (
         <View className="h-full">
-          <EditRecordInfo videouri={videoUri} noteList={notes} closeEdit={()=>setIsEditInfo(false)} clearNote={()=>setNotes([])}/>
+          <EditRecordInfo
+            videouri={videoUri}
+            noteList={notes}
+            closeEdit={() => setIsEditInfo(false)}
+            clearNote={() => setNotes([])}
+          />
         </View>
       )}
     </SafeAreaView>

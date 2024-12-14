@@ -7,10 +7,10 @@ interface NoteItemProps {
   second: number;
   bookmark: string;
   text: string;
-  id: number;
+  id: string;
   onTimePress?: (second: number) => void;
-  openEditNote: (text: string) => void;
-  openDeleteNote: (id: number) => void;
+  openEditNote: (text: string, id: string) => void;
+  openDeleteNote: (id: string) => void;
 }
 const formatTime = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600);
@@ -52,7 +52,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
         </View>
         <View className="mt-2 flex-row items-center">
           <Text className="border w-5/6 p-2 rounded-lg flex-grow">{text}</Text>
-          <TouchableOpacity className="ml-2" onPress={() => openEditNote(text)}>
+          <TouchableOpacity className="ml-2" onPress={() => openEditNote(text, id)}>
             <AntDesign name="edit" size={20} color="black" />
           </TouchableOpacity>
           <TouchableOpacity className="ml-2" onPress={() => openDeleteNote(id)}>

@@ -3,7 +3,8 @@ import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRoute } from "@react-navigation/native";
 import {
   FlatList,
   ScrollView,
@@ -14,20 +15,22 @@ import {
 } from "react-native";
 import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
-import noteListDummy from "./dummy-data/noteList";
-import NoteInput from "./components/NoteInput";
-const videoSource =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
+const wifiIp = "http://192.168.1.9";
 export default function PlayRecord() {
   const [isEdit, setIsEdit] = useState(false);
   const [textEdit, setTextEdit] = useState("");
   const [filterNote, setFilterNote] = useState("ALL");
   const [moreOption, setMoreOption] = useState(false);
-  const [noteList, setNoteList] = useState(noteListDummy);
-  const [isAddNote, setIsAddNote] = useState(false);
-  
-  const player = useVideoPlayer(videoSource, (player) => {
+  const [noteList, setNoteList] = useState([]);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [name, setName] = useState("");
+  const [date, setDate] = useState("");
+  const [editId, setEditId] = useState("");
+  const route = useRoute();
+  const { recordId } = route.params;
+  const player = useVideoPlayer(videoUrl, (player) => {
     player.loop = false;
     player.play();
     player.currentTime = 0;
@@ -35,9 +38,35 @@ export default function PlayRecord() {
   const seekAt = (second: number) => {
     player.currentTime = second;
   };
-  const openEditNote = (text: string) => {
+  const openEditNote = (text: string, id: string) => {
     setIsEdit(!isEdit);
+    setMoreOption(false);
+    setDropdownVisible(false);
+
     setTextEdit(text);
+    setEditId(id);
+  };
+  const confirmUpdateNote = () => {
+    setIsEdit(false);
+    updateNote(editId, textEdit);
+    fetchRecord();
+  };
+  const updateNote = async (noteId: string, newText: string) => {
+    try {
+      const response = await fetch(wifiIp + `:3000/note/editnote`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: noteId,
+          text: newText,
+        }),
+      });
+    } catch (error) {
+      console.error("Error updating note:", error);
+      Alert.alert("Error", "An error occurred while updating the note");
+    }
   };
   const deleteVideo = () => {
     Alert.alert(
@@ -57,8 +86,65 @@ export default function PlayRecord() {
       { cancelable: true }
     );
   };
+  const deleteNote = (id: string) => {
+    Alert.alert(
+      "Delete note",
+      "Are you sure delete the note?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            fetchDeleteNote(id);
+            fetchRecord();
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const dropdownOptions = ["ALL", "URGENT", "IMPORTANT", "EXAM", "RESEARCH"];
+
+  const fetchRecord = async () => {
+    try {
+      const response = await fetch(wifiIp + `:3000/record/${recordId}`);
+      const data = await response.json();
+      if (response.ok) {
+        setVideoUrl(data.record.url);
+        setNoteList(data.record.notes);
+        setName(data.record.name);
+        setDate(data.record.date);
+      } else {
+        Alert.alert("Error", data.error || "Failed to fetch record");
+      }
+    } catch (error) {
+      console.error("Error fetching record:", error);
+      Alert.alert("Error", "An error occurred while fetching the record");
+    }
+  };
+  const fetchDeleteNote = async (noteId: string) => {
+    try {
+      const response = await fetch(wifiIp + ":3000/note/deletenote", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: noteId }),
+      });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      Alert.alert("Error", "An error occurred while deleting the note");
+    }
+  };
+
+  useEffect(() => {
+    fetchRecord();
+  }, []);
   return (
     <View className="flex-1">
       <View
@@ -79,8 +165,8 @@ export default function PlayRecord() {
         }`}
       >
         <View className="flex-1">
-          <Text className="text-2xl font-bold pb-2 ml-auto">Giải tích</Text>
-          <Text>12/12/2024 - 17:23</Text>
+          <Text className="text-2xl font-bold pb-2 ml-auto">{name}</Text>
+          <Text>{date}</Text>
         </View>
         <TouchableOpacity onPress={() => setMoreOption(!moreOption)}>
           <Feather name="more-horizontal" size={24} color="black" />
@@ -95,6 +181,7 @@ export default function PlayRecord() {
           <TouchableOpacity
             style={{ backgroundColor: "#0B963E" }}
             className="flex-row items-center justify-center bg-blue-500 rounded-lg w-28 py-2"
+            disabled={isEdit}
           >
             <Entypo name="plus" size={22} color="white" />
             <Text className="ml-2 text-white font-semibold">NOTE</Text>
@@ -110,6 +197,7 @@ export default function PlayRecord() {
               borderColor: isDropdownVisible ? "#0B963E" : "transparent",
               borderWidth: isDropdownVisible ? 1 : 0,
             }}
+            disabled={isEdit}
           >
             <FontAwesome
               name="bookmark"
@@ -169,16 +257,17 @@ export default function PlayRecord() {
       </View>
       <ScrollView className={`${isEdit ? "inset-0 bg-black opacity-50" : ""}`}>
         {noteList
-          .filter((item) => filterNote === "ALL" || item.bookmark == filterNote)
+          .filter((item) => filterNote === "ALL" || item.tag == filterNote)
           .map((item) => (
             <NoteItem
-              key={item.id}
-              second={item.second}
-              bookmark={item.bookmark}
+              key={item.noteId}
+              second={item.timestamp}
+              bookmark={item.tag}
               text={item.text}
-              id={item.id}
+              id={item.noteId}
               onTimePress={seekAt}
               openEditNote={openEditNote}
+              openDeleteNote={deleteNote}
             />
           ))}
       </ScrollView>
@@ -197,7 +286,7 @@ export default function PlayRecord() {
           <View className="flex-row">
             <TouchableOpacity
               className="px-6 py-2 rounded-lg me-14"
-              onPress={() => setIsEdit(!isEdit)}
+              onPress={() => confirmUpdateNote()}
               style={{ backgroundColor: "#0B963E" }}
             >
               <Text className="text-white">UPDATE</Text>
@@ -213,15 +302,21 @@ export default function PlayRecord() {
         </View>
       )}
       {moreOption && (
-        <View className="w-full bg-white-500 p-4">
-          <TouchableOpacity className="p-2">
-            <Text>Share video</Text>
+        <View className="w-full bg-white-500 p-4 border border-zinc-300">
+          <TouchableOpacity className="p-3 flex-row items-center">
+            <Feather name="share" size={20} color="black" />
+            <Text className="text-2xl font-bold ms-2">Share video</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Text>Change name</Text>
+          <TouchableOpacity className="p-3 flex-row items-center">
+            <Feather name="edit" size={22} color="black" />
+            <Text className="text-2xl font-bold ms-2">Change name</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="p-2" onPress={deleteVideo}>
-            <Text>Delete video</Text>
+          <TouchableOpacity
+            className="p-3 flex-row items-center"
+            onPress={deleteVideo}
+          >
+            <MaterialIcons name="delete-outline" size={24} color="black" />
+            <Text className="text-2xl font-bold ms-2">Delete video</Text>
           </TouchableOpacity>
         </View>
       )}

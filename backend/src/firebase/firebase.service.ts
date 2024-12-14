@@ -83,4 +83,86 @@ export class FirebaseService {
       throw new Error('Failed to add note to Firestore');
     }
   }
+  async editNote(id: string, newText: string): Promise<void> {
+    const firestore = this.getFirestore();
+    const docRef = firestore.collection('Note').doc(id);
+    try {
+      await docRef.update({
+        text: newText,
+      });
+      console.log(`Note with ID ${id} updated successfully`);
+    } catch (error) {
+      console.error('Error updating note in Firestore:', error);
+      throw new Error('Failed to update note in Firestore');
+    }
+  }
+  async deleteNote(id: string): Promise<void> {
+    const firestore = this.getFirestore();
+    const docRef = firestore.collection('Note').doc(id);
+    try {
+      await docRef.delete();
+      console.log(`Note with ID ${id} deleted successfully`);
+      const noteOfRecordQuery = await firestore
+        .collection('NoteOfRecord')
+        .where('noteId', '==', id)
+        .get();
+      const batch = firestore.batch();
+      noteOfRecordQuery.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      console.log(
+        `Associated NoteOfRecord entries for note ID ${id} deleted successfully`,
+      );
+    } catch (error) {
+      console.error('Error deleting note in Firestore:', error);
+      throw new Error('Failed to delete note from Firestore');
+    }
+  }
+  async getRecord(recordId: string): Promise<any> {
+    const firestore = this.getFirestore();
+    try {
+      const recordDoc = await firestore
+        .collection('Record')
+        .doc(recordId)
+        .get();
+  
+      if (!recordDoc.exists) {
+        throw new Error('Record not found');
+      }
+  
+      const recordData = recordDoc.data();
+      const noteOfRecordQuery = await firestore
+        .collection('NoteOfRecord')
+        .where('recordId', '==', recordId)
+        .get();
+  
+      const noteIds: string[] = [];
+      noteOfRecordQuery.forEach((doc) => {
+        noteIds.push(doc.data().noteId);
+      });
+  
+      const notes: any[] = [];
+      for (const noteId of noteIds) {
+        const noteDoc = await firestore.collection('Note').doc(noteId).get();
+        if (noteDoc.exists) {
+          const noteData = noteDoc.data();
+          notes.push({
+            noteId,
+            ...noteData,
+          });
+        }
+      }
+      return {
+        url: recordData?.url,
+        name: recordData?.name,
+        date: recordData?.date,
+        notes: notes,
+      };
+    } catch (error) {
+      console.error('Error fetching record and notes:', error);
+      throw new Error('Failed to get record and notes');
+    }
+  }
+  
 }

@@ -12,7 +12,10 @@ export default function HomePage() {
         Bắt đầu ghi
       </Link>
       <Link
-        href="/playrecord"
+        href={{
+          pathname: "/PlayRecord",
+          params: { recordId: "flc29UGQTCrAwTgMWNNo" },
+        }}
         style={{ marginTop: 20, color: "blue", fontSize: 18 }}
       >
         Xem bản ghi
