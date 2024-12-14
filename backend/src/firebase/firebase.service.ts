@@ -41,12 +41,16 @@ export class FirebaseService {
   async uploadFile(filePath: string, fileBuffer: Buffer): Promise<string> {
     const bucket = this.getStorage().bucket();
     const file = bucket.file(filePath);
+
     try {
       await file.save(fileBuffer, {
         resumable: false,
         contentType: 'auto',
       });
-      return file.publicUrl();
+      const encodedFilePath = encodeURIComponent(filePath);
+      const fileURL = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedFilePath}?alt=media`;
+
+      return fileURL;
     } catch (error) {
       console.error('Error uploading file to Firebase Storage:', error);
       throw new Error('Failed to upload file to Firebase Storage');
@@ -66,7 +70,7 @@ export class FirebaseService {
       await docRef.set({
         text,
         timestamp,
-        tag
+        tag,
       });
       const noteId = docRef.id;
       await firestore.collection('NoteOfRecord').add({
