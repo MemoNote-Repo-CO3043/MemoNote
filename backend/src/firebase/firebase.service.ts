@@ -1,4 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class FirebaseService {
@@ -93,7 +99,9 @@ export class FirebaseService {
       console.log(`Note with ID ${id} updated successfully`);
     } catch (error) {
       console.error('Error updating note in Firestore:', error);
-      throw new Error('Failed to update note in Firestore');
+      throw new InternalServerErrorException(
+        'Failed to update note in Firestore',
+      );
     }
   }
   async deleteNote(id: string): Promise<void> {
@@ -116,7 +124,9 @@ export class FirebaseService {
       );
     } catch (error) {
       console.error('Error deleting note in Firestore:', error);
-      throw new Error('Failed to delete note from Firestore');
+      throw new InternalServerErrorException(
+        'Failed to delete note from Firestore',
+      );
     }
   }
   async getRecord(recordId: string): Promise<any> {
@@ -126,22 +136,22 @@ export class FirebaseService {
         .collection('Record')
         .doc(recordId)
         .get();
-  
+
       if (!recordDoc.exists) {
         throw new Error('Record not found');
       }
-  
+
       const recordData = recordDoc.data();
       const noteOfRecordQuery = await firestore
         .collection('NoteOfRecord')
         .where('recordId', '==', recordId)
         .get();
-  
+
       const noteIds: string[] = [];
       noteOfRecordQuery.forEach((doc) => {
         noteIds.push(doc.data().noteId);
       });
-  
+
       const notes: any[] = [];
       for (const noteId of noteIds) {
         const noteDoc = await firestore.collection('Note').doc(noteId).get();
@@ -161,8 +171,56 @@ export class FirebaseService {
       };
     } catch (error) {
       console.error('Error fetching record and notes:', error);
-      throw new Error('Failed to get record and notes');
+      throw new InternalServerErrorException('Failed to get record and notes');
     }
   }
-  
+
+  async getUser(username: string): Promise<any> {
+    const firestore = this.getFirestore();
+    try {
+      const userQuery = await firestore
+        .collection('User')
+        .where('username', '==', username)
+        .get();
+      if (userQuery.empty) {
+        throw new NotFoundException('User not found');
+      }
+      const userData = userQuery.docs[0].data();
+      return {
+        userId: userQuery.docs[0].id,
+        ...userData,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+  async createUser(username: string, password: string): Promise<any> {
+    const firestore = this.getFirestore();
+    try {
+      const userQuery = await firestore
+        .collection('User')
+        .where('username', '==', username)
+        .get();
+      if (!userQuery.empty) {
+        throw new ConflictException('Username already exists');
+      }
+      const docRef = firestore.collection('User').doc();
+      await docRef.set({
+        username,
+        password,
+      });
+      return {
+        userId: docRef.id,
+        username,
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw new ConflictException(error.message);
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
