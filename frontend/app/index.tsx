@@ -14,7 +14,7 @@ export default function HomePage() {
       <Link
         href={{
           pathname: "/PlayRecord",
-          params: { recordId: "flc29UGQTCrAwTgMWNNo" },
+          params: { recordId: "9UELvWdBNpsb02gf2byk" },
         }}
         style={{ marginTop: 20, color: "blue", fontSize: 18 }}
       >

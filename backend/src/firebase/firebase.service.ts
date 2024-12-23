@@ -223,4 +223,48 @@ export class FirebaseService {
       throw new InternalServerErrorException(error.message);
     }
   }
+  async deleteRecord(recordId: string): Promise<void> {
+    const firestore = this.getFirestore();
+    try {
+      const batch = firestore.batch();
+        const recordDocRef = firestore.collection('Record').doc(recordId);
+      batch.delete(recordDocRef);
+      const recordOfUserQuery = await firestore
+        .collection('RecordOfUser')
+        .where('recordId', '==', recordId)
+        .get();
+      recordOfUserQuery.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+        const recordSharedQuery = await firestore
+        .collection('RecordShared')
+        .where('recordId', '==', recordId)
+        .get();
+      recordSharedQuery.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+        const noteOfRecordQuery = await firestore
+        .collection('NoteOfRecord')
+        .where('recordId', '==', recordId)
+        .get();
+      const noteIds: string[] = [];
+      noteOfRecordQuery.forEach((doc) => {
+        noteIds.push(doc.data().noteId);
+        batch.delete(doc.ref);
+      });
+  
+      for (const noteId of noteIds) {
+        const noteDocRef = firestore.collection('Note').doc(noteId);
+        batch.delete(noteDocRef);
+      }
+      await batch.commit();
+      console.log(`Record with ID ${recordId} and related data deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting record and related data:', error);
+      throw new InternalServerErrorException(
+        'Failed to delete record and related data from Firestore',
+      );
+    }
+  }
+  
 }

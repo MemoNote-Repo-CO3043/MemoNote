@@ -5,6 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useState, useEffect } from "react";
 import { useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import {
   FlatList,
   ScrollView,
@@ -19,6 +20,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const wifiIp = "http://192.168.1.9";
 export default function PlayRecord() {
+  const router = useRouter();
+
   const [isEdit, setIsEdit] = useState(false);
   const [textEdit, setTextEdit] = useState("");
   const [filterNote, setFilterNote] = useState("ALL");
@@ -79,7 +82,7 @@ export default function PlayRecord() {
         },
         {
           text: "Delete",
-          // onPress: () => deleteVideo(videoId),
+          onPress: () => fetchDeleteRecord(recordId),
           style: "destructive",
         },
       ],
@@ -140,6 +143,21 @@ export default function PlayRecord() {
       console.error("Error deleting note:", error);
       Alert.alert("Error", "An error occurred while deleting the note");
     }
+  };
+  const fetchDeleteRecord = async (recordId: string) => {
+    try {
+      const response = await fetch(wifiIp + ":3000/record/deleterecord", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recordId: recordId }),
+      });
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      Alert.alert("Error", "An error occurred while deleting the record");
+    }
+    router.push("/");
   };
 
   useEffect(() => {

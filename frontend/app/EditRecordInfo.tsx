@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { Text, View, TextInput, TouchableOpacity } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, ActivityIndicator  } from "react-native";
 import React, { useState } from "react";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useRouter } from "expo-router";
@@ -22,10 +22,11 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
   videouri,
   noteList,
   closeEdit,
-  clearNote
+  clearNote,
 }) => {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const player = useVideoPlayer(videouri, (player) => {
     player.loop = false;
     player.play();
@@ -45,6 +46,7 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
     .toString()
     .padStart(2, "0")}:${currentDate.getMinutes().toString().padStart(2, "0")}`;
   const uploadVideo = async () => {
+    setIsLoading(true);
     const formData = new FormData();
     const video = {
       uri: videouri,
@@ -96,6 +98,11 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
       }
     } catch (error) {
       console.error("Error uploading video:", error);
+    } finally {
+      setIsLoading(false);
+      router.push("/");
+      closeEdit();
+      clearNote();
     }
   };
 
@@ -123,31 +130,40 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
         <Text className="font-bold">Created Date:</Text>
         <Text>{formattedDate}</Text>
       </View>
-      <View className="flex-row items-center justify-center flex-1 justify-end">
-        <TouchableOpacity
-          className="w-40 h-14 rounded-lg flex items-center justify-center me-4"
-          style={{ backgroundColor: "#0B963E" }}
-          onPress={() => {
-            uploadVideo();
-            router.push("/");
-            closeEdit();
-            clearNote();
-          }}
-        >
-          <Text className="text-white">SAVE</Text>
-        </TouchableOpacity>
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#0B963E" />
+          <Text>Uploading...</Text>
+        </View>
+      ) : (
+        <View className="flex-row items-center justify-center flex-1 justify-end">
+          <TouchableOpacity
+            className={`w-40 h-14 rounded-lg flex items-center justify-center me-4 ${
+              name === "" ? "opacity-50" : ""
+            }`}
+            style={{
+              backgroundColor: name === "" ? "#A0A0A0" : "#0B963E",
+            }}
+            disabled={name === ""}
+            onPress={() => {
+              uploadVideo();
+            }}
+          >
+            <Text className="text-white">SAVE</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            router.push("/");
-            closeEdit();
-            clearNote();
-          }}
-          className="w-40 h-14 rounded-lg border border-zinc-300 items-center justify-center"
-        >
-          <Text className="text-black">DELETE</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/");
+              closeEdit();
+              clearNote();
+            }}
+            className="w-40 h-14 rounded-lg border border-zinc-300 items-center justify-center"
+          >
+            <Text className="text-black">DELETE</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

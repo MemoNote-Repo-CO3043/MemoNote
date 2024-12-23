@@ -5,7 +5,8 @@ import {
   UploadedFile,
   Body,
   Param,
-  Get
+  Get,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseService } from '../firebase/firebase.service';
@@ -73,6 +74,16 @@ export class RecordController {
         message: 'Failed to retrieve record',
         error: error.message,
       };
+    }
+  }
+  @Delete('deleterecord')
+  async deleteRecord(@Body() body: { recordId: string }) {
+    const { recordId } = body;
+    try {
+      await this.firebaseService.deleteRecord(recordId);
+      return { message: 'Record deleted successfully', recordId };
+    } catch (error) {
+      return { message: 'Failed to delete record', error: error.message };
     }
   }
 }
