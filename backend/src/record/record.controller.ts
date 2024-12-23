@@ -7,11 +7,15 @@ import {
   Param,
   Get,
   Delete,
+  Put
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseService } from '../firebase/firebase.service';
 import { memoryStorage } from 'multer';
-
+class UpdateNameDto {
+  recordId: string;
+  newName: string;
+}
 class CreateRecordDto {
   name: string;
   date: string;
@@ -84,6 +88,16 @@ export class RecordController {
       return { message: 'Record deleted successfully', recordId };
     } catch (error) {
       return { message: 'Failed to delete record', error: error.message };
+    }
+  }
+  @Put('changename')
+  async changeName(@Body() body: UpdateNameDto) {
+    const { recordId, newName } = body;
+    try {
+      await this.firebaseService.updateRecordName(recordId, newName);
+      return { message: 'Name updated successfully', recordId };
+    } catch (error) {
+      return { message: 'Failed to update name', error: error.message };
     }
   }
 }

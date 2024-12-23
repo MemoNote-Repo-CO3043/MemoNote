@@ -266,5 +266,23 @@ export class FirebaseService {
       );
     }
   }
-  
+  async updateRecordName(recordId: string, newName: string): Promise<void> {
+    const firestore = this.getFirestore();
+    const recordRef = firestore.collection('Record').doc(recordId);
+    
+    try {
+      const recordDoc = await recordRef.get();
+      if (!recordDoc.exists) {
+        throw new NotFoundException(`Record with ID ${recordId} not found`);
+      }
+
+      await recordRef.update({
+        name: newName,
+      });
+      console.log(`Record with ID ${recordId} updated successfully with new name: ${newName}`);
+    } catch (error) {
+      console.error('Error updating record name in Firestore:', error);
+      throw new InternalServerErrorException('Failed to update record name');
+    }
+  }
 }
