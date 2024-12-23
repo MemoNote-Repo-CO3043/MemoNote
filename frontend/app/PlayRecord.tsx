@@ -5,6 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useState, useEffect } from "react";
 import { useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import {
   FlatList,
   ScrollView,
@@ -16,10 +17,14 @@ import {
 import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
 
 const wifiIp = "http://192.168.1.9";
 export default function PlayRecord() {
+  const router = useRouter();
+
   const [isEdit, setIsEdit] = useState(false);
+  const [isEditName, setIsEditName] = useState(false);
   const [textEdit, setTextEdit] = useState("");
   const [filterNote, setFilterNote] = useState("ALL");
   const [moreOption, setMoreOption] = useState(false);
@@ -51,6 +56,10 @@ export default function PlayRecord() {
     updateNote(editId, textEdit);
     fetchRecord();
   };
+  const confirmUpdateName = () => {
+    setIsEditName(false);
+    updateName(recordId, name);
+  };
   const updateNote = async (noteId: string, newText: string) => {
     try {
       const response = await fetch(wifiIp + `:3000/note/editnote`, {
@@ -68,6 +77,24 @@ export default function PlayRecord() {
       Alert.alert("Error", "An error occurred while updating the note");
     }
   };
+  const updateName = async (recordId: string, newName: string) => {
+    try {
+      const response = await fetch(wifiIp + `:3000/record/changename`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recordId: recordId,
+          newName: newName,
+        }),
+      });
+      fetchRecord();
+    } catch (error) {
+      console.error("Error updating name:", error);
+      Alert.alert("Error", "An error occurred while updating the name");
+    }
+  };
   const deleteVideo = () => {
     Alert.alert(
       "Delete video",
@@ -75,11 +102,12 @@ export default function PlayRecord() {
       [
         {
           text: "Cancel",
+          onPress: () => setMoreOption(false),
           style: "cancel",
         },
         {
           text: "Delete",
-          // onPress: () => deleteVideo(videoId),
+          onPress: () => fetchDeleteRecord(recordId),
           style: "destructive",
         },
       ],
@@ -141,6 +169,21 @@ export default function PlayRecord() {
       Alert.alert("Error", "An error occurred while deleting the note");
     }
   };
+  const fetchDeleteRecord = async (recordId: string) => {
+    try {
+      const response = await fetch(wifiIp + ":3000/record/deleterecord", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recordId: recordId }),
+      });
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      Alert.alert("Error", "An error occurred while deleting the record");
+    }
+    router.push("/");
+  };
 
   useEffect(() => {
     fetchRecord();
@@ -149,7 +192,7 @@ export default function PlayRecord() {
     <View className="flex-1">
       <View
         className={`w-full h-1/3 ${
-          isEdit ? "inset-0 bg-black opacity-50" : ""
+          isEdit || isEditName ? "inset-0 bg-black opacity-50" : ""
         }`}
       >
         <VideoView
@@ -161,20 +204,25 @@ export default function PlayRecord() {
       </View>
       <View
         className={`flex-row pb-3 px-4 pt-1 ${
-          isEdit ? "inset-0 bg-black opacity-50" : ""
+          isEdit || isEditName ? "inset-0 bg-black opacity-50" : ""
         }`}
       >
         <View className="flex-1">
           <Text className="text-2xl font-bold pb-2 ml-auto">{name}</Text>
           <Text>{date}</Text>
         </View>
-        <TouchableOpacity onPress={() => setMoreOption(!moreOption)}>
+        <TouchableOpacity
+          onPress={() => {
+            setMoreOption(!moreOption);
+            setDropdownVisible(false);
+          }}
+        >
           <Feather name="more-horizontal" size={24} color="black" />
         </TouchableOpacity>
       </View>
       <View
         className={`flex-row p-2 border-y border-zinc-300 justify-between items-center ${
-          isEdit ? "inset-0 bg-black opacity-50" : ""
+          isEdit || isEditName ? "inset-0 bg-black opacity-50" : ""
         }`}
       >
         <View>
@@ -191,7 +239,10 @@ export default function PlayRecord() {
         <View className="flex-1">
           <TouchableOpacity
             className="flex-row w-3/5 p-2 items-center rounded-t-lg ml-auto"
-            onPress={() => setDropdownVisible(!isDropdownVisible)}
+            onPress={() => {
+              setDropdownVisible(!isDropdownVisible);
+              setMoreOption(false);
+            }}
             style={{
               backgroundColor: isDropdownVisible ? "white" : "#0B963E",
               borderColor: isDropdownVisible ? "#0B963E" : "transparent",
@@ -255,7 +306,11 @@ export default function PlayRecord() {
           )}
         </View>
       </View>
-      <ScrollView className={`${isEdit ? "inset-0 bg-black opacity-50" : ""}`}>
+      <ScrollView
+        className={`${
+          isEdit || isEditName ? "inset-0 bg-black opacity-50" : ""
+        }`}
+      >
         {noteList
           .filter((item) => filterNote === "ALL" || item.tag == filterNote)
           .map((item) => (
@@ -301,13 +356,55 @@ export default function PlayRecord() {
           </View>
         </View>
       )}
+      {isEditName && (
+        <View className="bg-white justify-center items-center p-4 pb-8">
+          <TextInput
+            className="border h-20 p-2 mb-4 w-full border-zinc-300 rounded-lg text-gray-700"
+            value={name}
+            onChangeText={setName}
+            multiline
+            autoFocus={true}
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+
+          <View className="flex-row">
+            <TouchableOpacity
+              className="px-6 py-2 rounded-lg me-14"
+              onPress={() => confirmUpdateName()}
+              style={{
+                backgroundColor: name === "" ? "#A0A0A0" : "#0B963E",
+              }}
+              disabled={name === ""}
+            >
+              <Text className="text-white">UPDATE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="px-6 py-2 rounded-lg border border-zinc-300"
+              onPress={() => {
+                setIsEditName(!isEditName);
+                fetchRecord();
+              }}
+            >
+              <Text className="text-black">CANCEL</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
       {moreOption && (
         <View className="w-full bg-white-500 p-4 border border-zinc-300">
           <TouchableOpacity className="p-3 flex-row items-center">
             <Feather name="share" size={20} color="black" />
             <Text className="text-2xl font-bold ms-2">Share video</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="p-3 flex-row items-center">
+          <TouchableOpacity
+            className="p-3 flex-row items-center"
+            onPress={() => {
+              setIsEditName(!isEditName);
+              setMoreOption(false);
+            }}
+          >
             <Feather name="edit" size={22} color="black" />
             <Text className="text-2xl font-bold ms-2">Change name</Text>
           </TouchableOpacity>
