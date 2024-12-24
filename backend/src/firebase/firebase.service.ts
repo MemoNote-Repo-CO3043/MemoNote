@@ -227,7 +227,7 @@ export class FirebaseService {
     const firestore = this.getFirestore();
     try {
       const batch = firestore.batch();
-        const recordDocRef = firestore.collection('Record').doc(recordId);
+      const recordDocRef = firestore.collection('Record').doc(recordId);
       batch.delete(recordDocRef);
       const recordOfUserQuery = await firestore
         .collection('RecordOfUser')
@@ -236,14 +236,14 @@ export class FirebaseService {
       recordOfUserQuery.forEach((doc) => {
         batch.delete(doc.ref);
       });
-        const recordSharedQuery = await firestore
+      const recordSharedQuery = await firestore
         .collection('RecordShared')
         .where('recordId', '==', recordId)
         .get();
       recordSharedQuery.forEach((doc) => {
         batch.delete(doc.ref);
       });
-        const noteOfRecordQuery = await firestore
+      const noteOfRecordQuery = await firestore
         .collection('NoteOfRecord')
         .where('recordId', '==', recordId)
         .get();
@@ -252,13 +252,15 @@ export class FirebaseService {
         noteIds.push(doc.data().noteId);
         batch.delete(doc.ref);
       });
-  
+
       for (const noteId of noteIds) {
         const noteDocRef = firestore.collection('Note').doc(noteId);
         batch.delete(noteDocRef);
       }
       await batch.commit();
-      console.log(`Record with ID ${recordId} and related data deleted successfully`);
+      console.log(
+        `Record with ID ${recordId} and related data deleted successfully`,
+      );
     } catch (error) {
       console.error('Error deleting record and related data:', error);
       throw new InternalServerErrorException(
@@ -269,7 +271,7 @@ export class FirebaseService {
   async updateRecordName(recordId: string, newName: string): Promise<void> {
     const firestore = this.getFirestore();
     const recordRef = firestore.collection('Record').doc(recordId);
-    
+
     try {
       const recordDoc = await recordRef.get();
       if (!recordDoc.exists) {
@@ -279,10 +281,120 @@ export class FirebaseService {
       await recordRef.update({
         name: newName,
       });
-      console.log(`Record with ID ${recordId} updated successfully with new name: ${newName}`);
+      console.log(
+        `Record with ID ${recordId} updated successfully with new name: ${newName}`,
+      );
     } catch (error) {
       console.error('Error updating record name in Firestore:', error);
       throw new InternalServerErrorException('Failed to update record name');
+    }
+  }
+  async getRecordsByUserId(userId: string): Promise<any> {
+    const firestore = this.getFirestore();
+    try {
+      const recordOfUserQuery = await firestore
+        .collection('RecordOfUser')
+        .where('userId', '==', userId)
+        .get();
+      const recordIds: string[] = [];
+      recordOfUserQuery.forEach((doc) => {
+        recordIds.push(doc.data().recordId);
+      });
+
+      const records: any[] = [];
+      for (const recordId of recordIds) {
+        const recordDoc = await firestore
+          .collection('Record')
+          .doc(recordId)
+          .get();
+        if (recordDoc.exists) {
+          const recordData = recordDoc.data();
+          records.push({
+            recordId,
+            ...recordData,
+          });
+        }
+      }
+      return records;
+    } catch (error) {
+      console.error('Error fetching records:', error);
+      throw new InternalServerErrorException('Failed to get records');
+    }
+  }
+  async addSharedRecords(recordId: string, email: string): Promise<void> {
+    try {
+      const firestore = this.getFirestore();
+      const userQuery = await firestore
+        .collection('User')
+        .where('username', '==', email)
+        .get();
+
+      if (userQuery.empty) {
+        throw new NotFoundException('User not found');
+      }
+
+      const checkExists = await firestore
+        .collection('RecordShared')
+        .where('recordId', '==', recordId)
+        .where('userId', '==', userQuery.docs[0].id)
+        .get();
+
+      if (!checkExists.empty) {
+        throw new ConflictException('Record already shared with user');
+      }
+
+      const checkOwner = await firestore
+        .collection('RecordOfUser')
+        .where('recordId', '==', recordId)
+        .where('userId', '==', userQuery.docs[0].id)
+        .get();
+
+      if (!checkOwner.empty) {
+        throw new ConflictException('Record owner cannot be shared');
+      }
+
+      const batch = firestore.batch();
+      //add record to firestore with userId
+      const recordOfUserRef = firestore.collection('RecordShared').doc();
+      batch.set(recordOfUserRef, {
+        recordId,
+        userId: userQuery.docs[0].id,
+      });
+    } catch (error) {
+      console.error('Error adding shared records:', error);
+      throw new InternalServerErrorException('Failed to add shared records');
+    }
+  }
+  async getSharedRecords(userId: string): Promise<any> {
+    const firestore = this.getFirestore();
+    try {
+      const recordSharedQuery = await firestore
+        .collection('RecordShared')
+        .where('userId', '==', userId)
+        .get();
+      const recordIds: string[] = [];
+      recordSharedQuery.forEach((doc) => {
+        recordIds.push(doc.data().recordId);
+      });
+
+      const records: any[] = [];
+      for (const recordId of recordIds) {
+        const recordDoc = await firestore
+          .collection('Record')
+          .doc(recordId)
+          .get();
+        if (recordDoc.exists) {
+          const recordData = recordDoc.data();
+          records.push({
+            recordId,
+            ...recordData,
+          });
+        }
+      }
+      return records;
+    } catch (error) {
+      console.error('Error fetching shared records:', error);
+      throw new InternalServerErrorException('Failed to get shared records');
     }
   }
 }

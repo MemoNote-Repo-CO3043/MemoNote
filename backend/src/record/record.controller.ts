@@ -7,11 +7,16 @@ import {
   Param,
   Get,
   Delete,
-  Put
+  Put,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
+
+import * as jwt from 'jsonwebtoken';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FirebaseService } from '../firebase/firebase.service';
 import { memoryStorage } from 'multer';
+import { request } from 'http';
 class UpdateNameDto {
   recordId: string;
   newName: string;
@@ -98,6 +103,47 @@ export class RecordController {
       return { message: 'Name updated successfully', recordId };
     } catch (error) {
       return { message: 'Failed to update name', error: error.message };
+    }
+  }
+  @Get('record/user')
+  async getRecordsByUser(@Headers('Authorization') token: string) {
+    try {
+      if (!token) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+      const decodedToken = jwt.decode(token.split(' ')[1]) as jwt.JwtPayload;
+      const userId = decodedToken?.id;
+      const records = await this.firebaseService.getRecordsByUserId(userId);
+      return { message: 'Records retrieved successfully', records };
+    } catch (error) {
+      return { message: 'Failed to retrieve records', error: error.message };
+    }
+  }
+  @Post('sharedrecords')
+  async addSharedRecords(@Body() body: { recordId: string; email: string }) {
+    const { recordId, email } = body;
+    try {
+      await this.firebaseService.addSharedRecords(recordId, email);
+      return { message: 'Records shared successfully', recordId };
+    } catch (error) {
+      return { message: 'Failed to share records', error: error.message };
+    }
+  }
+  @Get('shared/record')
+  async getSharedRecords(@Headers('Authorization') token: string) {
+    try {
+      if (!token) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+      const decodedToken = jwt.decode(token.split(' ')[1]) as jwt.JwtPayload;
+      const userId = decodedToken?.id;
+      const records = await this.firebaseService.getSharedRecords(userId);
+      return { message: 'Shared records retrieved successfully', records };
+    } catch (error) {
+      return {
+        message: 'Failed to retrieve shared records',
+        error: error.message,
+      };
     }
   }
 }

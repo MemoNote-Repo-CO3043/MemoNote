@@ -16,17 +16,21 @@ export class UserService {
   async login(username: string, password: string) {
     const user = await this.firebaseService.getUser(username);
     if (await bcrypt.compare(password, user.password)) {
-      return jwt.sign({ id: user.userId }, secretKey, {
-        expiresIn: '10h',
-      });
+      return {
+        access_token: jwt.sign({ id: user.userId }, secretKey, {
+          expiresIn: '10h',
+        }),
+      };
     }
     throw new NotFoundException('Invalid username or password');
   }
   async register(username: string, password: string) {
     password = bcrypt.hashSync(password, saltRounds);
     const user = await this.firebaseService.createUser(username, password);
-    return jwt.sign({ id: user.userId }, secretKey, {
-      expiresIn: '10h',
-    });
+    return {
+      access_token: jwt.sign({ id: user.userId }, secretKey, {
+        expiresIn: '10h',
+      }),
+    };
   }
 }
