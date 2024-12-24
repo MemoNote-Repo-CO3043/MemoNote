@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
@@ -22,7 +23,7 @@ import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
 const wifiIp = "http://192.168.1.9";
 export default function PlayRecord() {
   const router = useRouter();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
   const [textEdit, setTextEdit] = useState("");
@@ -115,6 +116,7 @@ export default function PlayRecord() {
     );
   };
   const deleteNote = (id: string) => {
+    setMoreOption(false);
     Alert.alert(
       "Delete note",
       "Are you sure delete the note?",
@@ -186,8 +188,20 @@ export default function PlayRecord() {
   };
 
   useEffect(() => {
-    fetchRecord();
+    const fetchData = async () => {
+      setIsLoading(true);
+      await fetchRecord();
+      setIsLoading(false);
+    };
+    fetchData();
   }, []);
+
+  if (isLoading)
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#0B963E" />
+      </View>
+    );
   return (
     <View className="flex-1">
       <View
