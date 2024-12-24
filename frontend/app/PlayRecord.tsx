@@ -20,7 +20,7 @@ import { Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
 
-const wifiIp = "http://192.168.1.9";
+const baseUrl = "https://memonote.onrender.com";
 export default function PlayRecord() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +63,7 @@ export default function PlayRecord() {
   };
   const updateNote = async (noteId: string, newText: string) => {
     try {
-      const response = await fetch(wifiIp + `:3000/note/editnote`, {
+      const response = await fetch(baseUrl + `/note/editnote`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export default function PlayRecord() {
   };
   const updateName = async (recordId: string, newName: string) => {
     try {
-      const response = await fetch(wifiIp + `:3000/record/changename`, {
+      const response = await fetch(baseUrl + `/record/changename`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +142,7 @@ export default function PlayRecord() {
 
   const fetchRecord = async () => {
     try {
-      const response = await fetch(wifiIp + `:3000/record/${recordId}`);
+      const response = await fetch(baseUrl + `/record/${recordId}`);
       const data = await response.json();
       if (response.ok) {
         setVideoUrl(data.record.url);
@@ -159,7 +159,7 @@ export default function PlayRecord() {
   };
   const fetchDeleteNote = async (noteId: string) => {
     try {
-      const response = await fetch(wifiIp + ":3000/note/deletenote", {
+      const response = await fetch(baseUrl + "/note/deletenote", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -173,7 +173,7 @@ export default function PlayRecord() {
   };
   const fetchDeleteRecord = async (recordId: string) => {
     try {
-      const response = await fetch(wifiIp + ":3000/record/deleterecord", {
+      const response = await fetch(baseUrl + "/record/deleterecord", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
