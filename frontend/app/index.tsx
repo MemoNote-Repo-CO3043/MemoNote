@@ -26,7 +26,10 @@ export default function HomePage() {
       >
         Test Component
       </Link>
-      <Link href="/../src/Screens/Welcome/WelcomeContainer">Onboarding</Link>
+      <Link href="/Screens/Welcome/OnboardingScreens">Onboarding</Link>
+      <Link href="/Screens/Login/LoginScreen">Login</Link>
+      <Link href="/Screens/Register/RegisterScreen">Register</Link>
+      <Link href="/Screens/Home/HomeScreen">HomeScreen</Link>
     </View>
   );
 }
