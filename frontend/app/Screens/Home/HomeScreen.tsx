@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,60 +12,49 @@ import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { TextInput } from "react-native-paper";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Sentry from "@sentry/react-native";
 
-const recordings = [
-  {
-    id: "3g7jfks",
-    recordId: "9UELvWdBNpsb02gf2byk",
-    name: "Vật lý 1",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "7a3jdkf",
-    recordId: "BtN3oWdZKmRvYJ9l8sUX",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "2jf8kd9",
-    recordId: "LrKPQ5NYX2oWV8UO9J3VA",
-    name: "Vật lý 2",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "kf7d93h",
-    recordId: "XWLr9VpQgNYKbT25J3UOA",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "3djf7sl",
-    recordId: "JrB9VNWXUQoK8LYT2A5Op",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "9dkf73l",
-    recordId: "5AOVgPQpJr8cK27T4XxL",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-];
+const ip = "192.168.68.104";
 
 const HomeScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const activeScreen = "HOME";
   const [selectedItem, setSelectedItem] = useState(null);
+  const [recordings, setRecordings] = useState([]);
   const [modalType, setModalType] = useState(null); // To determine which modal to show
   const [newName, setNewName] = useState("");
   const [shareEmail, setShareEmail] = useState("");
 
+  useEffect(() => {
+    const checkToken = async () => {
+      if ((await AsyncStorage.getItem("token")) === null) {
+        router.push("Screens/Login/LoginScreen");
+      }
+    };
+    checkToken();
+  }, []);
+  const fetchRecordings = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch(`http://${ip}:3000/record/record/user`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setRecordings(data.records);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+  useEffect(() => {
+    fetchRecordings();
+  }, []);
   const openModal = (item, type) => {
     setSelectedItem(item);
     setModalType(type);
@@ -82,12 +71,28 @@ const HomeScreen = () => {
     setShareEmail("");
   };
 
-  const handleChangeName = () => {
-    if (selectedItem) {
-      selectedItem.name = newName;
+  const handleChangeName = async () => {
+    try {
+      if (selectedItem) {
+        selectedItem.name = newName;
+        const response = await fetch(`http://${ip}:3000/record/changename`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ recordId: selectedItem.recordId, newName }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          Alert.alert("Success", "Name updated successfully!");
+          closeModal();
+        } else {
+          throw new Error(data.message);
+        }
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
     }
-    Alert.alert("Success", "Name updated successfully!");
-    closeModal();
   };
   const handleRecord = () => {
     router.push("/RecordScreen");
@@ -102,9 +107,29 @@ const HomeScreen = () => {
         {
           text: "Confirm",
           style: "destructive",
-          onPress: () => {
-            console.log("Video Deleted:", selectedItem);
-            closeModal();
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                `http://${ip}:3000/record/deleterecord`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ recordId: selectedItem.recordId }),
+                }
+              );
+              const data = await response.json();
+              if (response.ok) {
+                fetchRecordings();
+                Alert.alert("Success", "Video deleted successfully!");
+                closeModal();
+              } else {
+                throw new Error(data.message);
+              }
+            } catch (error) {
+              Alert.alert("Error", error.message);
+            }
           },
         },
       ],
@@ -116,9 +141,30 @@ const HomeScreen = () => {
     // go to the recording screen
     router.push(`/PlayRecord?recordId=${recordId}`);
   };
-  const handleShareVideo = () => {
-    Alert.alert("Shared Successfully", `Video shared to ${shareEmail}`);
-    closeModal();
+  const handleShareVideo = async () => {
+    try {
+      const response = await fetch(`http://${ip}:3000/record/sharedrecords`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recordId: selectedItem.recordId,
+          email: shareEmail,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert("Shared Successfully", `Video shared to ${shareEmail}`);
+        closeModal();
+      } else {
+        Alert.alert("Error", data.message);
+        return;
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+      Sentry.captureException(error);
+    }
   };
   const handleToStored = () => {
     router.replace("Screens/Stored/StoredScreen");
@@ -143,7 +189,7 @@ const HomeScreen = () => {
       >
         <View style={styles.thumbnailContent}>
           <Image
-            source={{ uri: "https://via.placeholder.com/100" }}
+            source={require("../../../assets/images/background.jpg")}
             style={styles.thumbnail}
           />
         </View>
@@ -164,20 +210,23 @@ const HomeScreen = () => {
       </TouchableOpacity>
     </View>
   );
-
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem("token");
+    router.push("Screens/Login/LoginScreen");
+  };
   return (
     <View style={styles.container}>
       <View style={styles.titleContainer}>
         <View></View>
         <Text style={styles.title}>Recordings</Text>
-        <TouchableOpacity style={styles.accountButton}>
+        <TouchableOpacity style={styles.accountButton} onPress={handleLogout}>
           <Ionicons name="person-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
       <FlatList
         data={recordings}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.recordId}
         style={{ flexGrow: 0, height: 600 }}
       />
       <Modal
@@ -395,7 +444,6 @@ const styles = StyleSheet.create({
     width: 108,
     height: 64,
     borderRadius: 8,
-    marginRight: 12,
   },
   cardContent: {
     flex: 1,

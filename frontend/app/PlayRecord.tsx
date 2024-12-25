@@ -18,8 +18,7 @@ import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
-
-const wifiIp = "http://192.168.1.9";
+const wifiIp = "http://192.168.68.104";
 export default function PlayRecord() {
   const router = useRouter();
 

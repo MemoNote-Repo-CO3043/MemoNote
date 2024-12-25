@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -12,118 +12,39 @@ import { Ionicons } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { TextInput } from "react-native-paper";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const recordings = [
-  {
-    id: "3g7jfks",
-    recordId: "9UELvWdBNpsb02gf2byk",
-    name: "Vật lý 1",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "7a3jdkf",
-    recordId: "BtN3oWdZKmRvYJ9l8sUX",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "2jf8kd9",
-    recordId: "LrKPQ5NYX2oWV8UO9J3VA",
-    name: "Vật lý 2",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "kf7d93h",
-    recordId: "XWLr9VpQgNYKbT25J3UOA",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "3djf7sl",
-    recordId: "JrB9VNWXUQoK8LYT2A5Op",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-  {
-    id: "9dkf73l",
-    recordId: "5AOVgPQpJr8cK27T4XxL",
-    name: "Vật lý 3",
-    totalTime: "00:25:15",
-    date: "15/11/2024",
-  },
-];
+const ip = "192.168.68.104";
 
 const StoredScreen = () => {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const activeScreen = "STORED";
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [modalType, setModalType] = useState(null); // To determine which modal to show
-  const [newName, setNewName] = useState("");
-  const [shareEmail, setShareEmail] = useState("");
+  const [recordings, setRecordings] = useState([]);
 
-  const openModal = (item, type) => {
-    setSelectedItem(item);
-    setModalType(type);
-    setModalVisible(true);
-    if (type === "changeName") setNewName(item.name);
-    if (type === "shareVideo") setShareEmail("");
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedItem(null);
-    setModalType(null);
-    setNewName("");
-    setShareEmail("");
-  };
-
-  const handleChangeName = () => {
-    if (selectedItem) {
-      selectedItem.name = newName;
-    }
-    Alert.alert("Success", "Name updated successfully!");
-    closeModal();
-  };
+  useEffect(() => {
+    const checkToken = async () => {
+      if ((await AsyncStorage.getItem("token")) === null) {
+        router.push("Screens/Login/LoginScreen");
+      }
+    };
+    checkToken();
+  }, []);
   const handleRecord = () => {
     router.push("/RecordScreen");
   };
 
-  const handleDeleteVideo = () => {
-    Alert.alert(
-      "Delete Video",
-      "Are you sure you want to delete this video?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          style: "destructive",
-          onPress: () => {
-            console.log("Video Deleted:", selectedItem);
-            closeModal();
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   const handlePlayRecording = (recordId: string) => {
-    // go to the recording screen
     router.push(`/PlayRecord?recordId=${recordId}`);
-  };
-  const handleShareVideo = () => {
-    Alert.alert("Shared Successfully", `Video shared to ${shareEmail}`);
-    closeModal();
   };
   const handleToHome = () => {
     router.replace("Screens/Home/HomeScreen");
   };
-
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("token");
+      router.push("Screens/Login/LoginScreen");
+    } catch (error) {
+      console.error("Failed to logout:", error);
+    }
+  };
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardTitle}></View>
@@ -136,7 +57,7 @@ const StoredScreen = () => {
       >
         <View style={styles.thumbnailContent}>
           <Image
-            source={{ uri: "https://via.placeholder.com/100" }}
+            source={require("../../../assets/images/background.jpg")}
             style={styles.thumbnail}
           />
         </View>
@@ -145,10 +66,10 @@ const StoredScreen = () => {
             <Text style={styles.label}>Name: </Text>
             <Text style={styles.detail}>{item.name}</Text>
           </Text>
-          <Text>
+          {/* <Text>
             <Text style={styles.label}>Total time: </Text>
             <Text style={styles.detail}>{item.totalTime}</Text>
-          </Text>
+          </Text> */}
           <Text>
             <Text style={styles.label}>Date: </Text>
             <Text style={styles.detail}>{item.date}</Text>
@@ -157,131 +78,48 @@ const StoredScreen = () => {
       </TouchableOpacity>
     </View>
   );
+  const fetchRecordings = async () => {
+    const token = await AsyncStorage.getItem("token");
+    const response = await fetch(`http://${ip}:3000/record/shared/record`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setRecordings(data.records);
+    } else {
+      Alert.alert(data.message || "Error getting recordings");
+    }
+  };
 
+  useEffect(() => {
+    fetchRecordings();
+  }, []);
   return (
     <View style={styles.container}>
       <View
         style={[styles.titleContainer, { paddingLeft: 32, paddingRight: 32 }]}
       >
-        <TouchableOpacity style={styles.accountButton}>
+        <TouchableOpacity
+          style={styles.accountButton}
+          onPress={fetchRecordings}
+        >
           <Ionicons name="reload" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.title}>Shared</Text>
-        <TouchableOpacity style={styles.accountButton}>
+        <TouchableOpacity style={styles.accountButton} onPress={handleLogout}>
           <Ionicons name="person-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
       <FlatList
         data={recordings}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.recordId}
         style={{ flexGrow: 0, height: 600 }}
       />
-      <Modal
-        isVisible={isModalVisible}
-        onBackdropPress={closeModal}
-        onBackButtonPress={closeModal}
-        style={styles.modalContainer}
-        animationIn="slideInUp"
-        animationOut="slideOutDown"
-      >
-        {modalType === "menu" && (
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() => openModal(selectedItem, "shareVideo")}
-            >
-              <Ionicons name="share-social-outline" size={24} color="black" />
-              <Text style={styles.modalText}>Share Video</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={() => openModal(selectedItem, "changeName")}
-            >
-              <Ionicons name="create-outline" size={24} color="black" />
-              <Text style={styles.modalText}>Change Name</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalOption}
-              onPress={handleDeleteVideo}
-            >
-              <Ionicons name="trash-outline" size={24} color="red" />
-              <Text style={[styles.modalText, { color: "red" }]}>
-                Delete Video
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {modalType === "changeName" && (
-          <View style={styles.modalContent}>
-            <Text style={styles.editLabel}>Enter New Name</Text>
-            <TextInput
-              mode="flat"
-              textColor="black"
-              value={newName}
-              onChangeText={setNewName}
-              style={styles.input}
-              placeholder="New Name"
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                width: "100%",
-                justifyContent: "space-between",
-              }}
-            >
-              <TouchableOpacity
-                style={[styles.saveButton, { width: "48%" }]}
-                onPress={handleChangeName}
-              >
-                <Text style={styles.saveButtonText}>Confirm</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.cancelButton, { width: "48%" }]}
-                onPress={closeModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {modalType === "shareVideo" && (
-          <View style={styles.modalContent}>
-            <Text style={styles.editLabel}>Enter Email to Share</Text>
-            <TextInput
-              value={shareEmail}
-              onChangeText={setShareEmail}
-              style={styles.input}
-              placeholder="Email Address"
-              keyboardType="email-address"
-              mode="flat"
-              textColor="black"
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                width: "100%",
-                justifyContent: "space-between",
-              }}
-            >
-              <TouchableOpacity
-                style={[styles.saveButton, { width: "48%" }]}
-                onPress={handleShareVideo}
-              >
-                <Text style={styles.saveButtonText}>Confirm</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.cancelButton, { width: "48%" }]}
-                onPress={closeModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </Modal>
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem} onPress={() => handleToHome()}>
           <Ionicons name="home-outline" size={28} color="gray" />
@@ -377,11 +215,10 @@ const styles = StyleSheet.create({
     width: 108,
     height: 64,
     borderRadius: 8,
-    marginRight: 12,
   },
   cardContent: {
     flex: 1,
-    marginTop: 4,
+    marginTop: 12,
   },
   label: {
     fontWeight: "bold",

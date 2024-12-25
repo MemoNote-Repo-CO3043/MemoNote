@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,77 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
+const ip = "192.168.68.104";
+
 const RegisterScreen: React.FC = () => {
-  const router = useRouter(); // Use router for navigation
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [registerError, setRegisterError] = useState("");
+
+  const handleRegister = async () => {
+    setEmailError("");
+    setPasswordError("");
+    setRegisterError("");
+
+    let isValid = true;
+
+    // Validate email
+    if (!email.includes("@")) {
+      setEmailError("Invalid email");
+      isValid = false;
+    }
+
+    // Validate password
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    try {
+      const response = await fetch("http://" + ip + ":3000/user/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        await AsyncStorage.setItem("token", data.access_token);
+        router.push("Screens/Home/HomeScreen");
+      } else {
+        setRegisterError(data.message || "Registration failed");
+      }
+    } catch (error) {
+      setRegisterError("Error connecting to server");
+      console.error("Error registering", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
+      {/* Error Notification */}
+      {registerError ? (
+        <View style={styles.errorNotification}>
+          <Text style={styles.errorNotificationText}>{registerError}</Text>
+        </View>
+      ) : null}
+
       {/* Close Button */}
-      <TouchableOpacity style={styles.closeButton}>
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => router.push("Screens/Home/HomeScreen")}
+      >
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 
@@ -33,22 +94,34 @@ const RegisterScreen: React.FC = () => {
 
       {/* Email Input */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, emailError ? styles.inputError : null]}
         placeholder="Email Address"
         placeholderTextColor="#ccc"
         keyboardType="email-address"
+        onChangeText={(value) => {
+          setEmail(value);
+          if (emailError) setEmailError("");
+        }}
       />
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       {/* Password Input */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, passwordError ? styles.inputError : null]}
         placeholder="Password"
         placeholderTextColor="#ccc"
         secureTextEntry={true}
+        onChangeText={(value) => {
+          setPassword(value);
+          if (passwordError) setPasswordError("");
+        }}
       />
+      {passwordError ? (
+        <Text style={styles.errorText}>{passwordError}</Text>
+      ) : null}
 
       {/* Register Button */}
-      <TouchableOpacity style={styles.registerButton}>
+      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
 
@@ -99,6 +172,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 16,
   },
+  errorNotification: {
+    width: width - 32,
+    backgroundColor: "#FFCCCC",
+    borderWidth: 1,
+    borderColor: "#FF0000",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorNotificationText: {
+    color: "#FF0000",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
   closeButton: {
     position: "absolute",
     top: 8,
@@ -129,6 +216,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: "#FF0000",
+    backgroundColor: "#FFEAEA",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 8,
+    alignSelf: "flex-start",
   },
   registerButton: {
     width: width - 32,

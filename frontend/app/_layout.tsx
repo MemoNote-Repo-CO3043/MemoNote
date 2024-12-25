@@ -1,8 +1,16 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { PaperProvider } from "react-native-paper";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "../global.css";
+import * as Sentry from "@sentry/react-native";
+
+Sentry.init({
+  dsn: "https://9c0e2e7557f8e22a775a5ff43b743036@o4508518477463552.ingest.us.sentry.io/4508518478970880",
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // enableSpotlight: __DEV__,
+});
 
 export default function RootLayout() {
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);

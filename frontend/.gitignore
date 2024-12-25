@@ -39,3 +39,4 @@ app-example
 
 package-lock.json
 yarn.lock
+.env.local
