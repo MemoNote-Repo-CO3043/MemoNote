@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
-const ip = "192.168.68.104";
+const url = "https://memonote.onrender.com/";
 
 const RegisterScreen: React.FC = () => {
   const router = useRouter();
@@ -45,7 +45,7 @@ const RegisterScreen: React.FC = () => {
     if (!isValid) return;
 
     try {
-      const response = await fetch("http://" + ip + ":3000/user/register", {
+      const response = await fetch(url + "user/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

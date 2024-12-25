@@ -14,7 +14,7 @@ import { TextInput } from "react-native-paper";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ip = "192.168.68.104";
+const url = "https://memonote.onrender.com/";
 
 const StoredScreen = () => {
   const [recordings, setRecordings] = useState([]);
@@ -80,7 +80,7 @@ const StoredScreen = () => {
   );
   const fetchRecordings = async () => {
     const token = await AsyncStorage.getItem("token");
-    const response = await fetch(`http://${ip}:3000/record/shared/record`, {
+    const response = await fetch(url + `/record/shared/record`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

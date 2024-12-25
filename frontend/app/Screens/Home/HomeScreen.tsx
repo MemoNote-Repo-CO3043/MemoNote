@@ -15,7 +15,7 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sentry from "@sentry/react-native";
 
-const ip = "192.168.68.104";
+const url = "https://memonote.onrender.com/";
 
 const HomeScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -37,7 +37,7 @@ const HomeScreen = () => {
   const fetchRecordings = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(`http://${ip}:3000/record/record/user`, {
+      const response = await fetch(`${url}record/record/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -75,7 +75,7 @@ const HomeScreen = () => {
     try {
       if (selectedItem) {
         selectedItem.name = newName;
-        const response = await fetch(`http://${ip}:3000/record/changename`, {
+        const response = await fetch(`${url}record/changename`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -109,16 +109,13 @@ const HomeScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              const response = await fetch(
-                `http://${ip}:3000/record/deleterecord`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ recordId: selectedItem.recordId }),
-                }
-              );
+              const response = await fetch(`${url}record/deleterecord`, {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ recordId: selectedItem.recordId }),
+              });
               const data = await response.json();
               if (response.ok) {
                 fetchRecordings();
@@ -143,7 +140,7 @@ const HomeScreen = () => {
   };
   const handleShareVideo = async () => {
     try {
-      const response = await fetch(`http://${ip}:3000/record/sharedrecords`, {
+      const response = await fetch(`${url}record/sharedrecords`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

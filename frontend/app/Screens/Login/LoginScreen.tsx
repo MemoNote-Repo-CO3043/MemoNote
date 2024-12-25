@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Sentry from "@sentry/react-native";
 const { width } = Dimensions.get("window");
 
-const ip = "192.168.68.104";
+const url = "https://memonote.onrender.com/";
 
 const LoginScreen: React.FC = () => {
   const router = useRouter(); // Use router for navigation
@@ -45,7 +45,7 @@ const LoginScreen: React.FC = () => {
     if (!isValid) return;
 
     try {
-      const response = await fetch("http://" + ip + ":3000/user/login", {
+      const response = await fetch(url + "user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
