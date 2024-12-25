@@ -5,7 +5,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { useRouter } from "expo-router";
 
 const userId = "J1z2TkzcLRs6Xqy66PIn";
-const wifiIp = "http://192.168.1.9";
+const baseUrl = "https://memonote.onrender.com";
 
 interface EditRecordInfoProps {
   videouri: string;
@@ -59,7 +59,7 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
     formData.append("userId", userId);
 
     try {
-      const response = await fetch(wifiIp + ":3000/record/save_record", {
+      const response = await fetch(baseUrl + "/record/save_record", {
         method: "POST",
         headers: {
           "Content-Type": "multipart/form-data",
@@ -75,7 +75,7 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
         noteFormData.append("recordId", recordId);
         noteFormData.append("notes", JSON.stringify(modifiedNoteList));
 
-        const noteResponse = await fetch(wifiIp + ":3000/note/addnotes", {
+        const noteResponse = await fetch(baseUrl + "/note/addnotes", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

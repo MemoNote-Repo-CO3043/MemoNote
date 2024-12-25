@@ -13,15 +13,21 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
+<<<<<<< HEAD
 const wifiIp = "http://192.168.68.104";
+=======
+
+const baseUrl = "https://memonote.onrender.com";
+>>>>>>> fafb06a48007fe57f0ba6e60f0be0e4fbfb08b0f
 export default function PlayRecord() {
   const router = useRouter();
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
   const [textEdit, setTextEdit] = useState("");
@@ -61,7 +67,7 @@ export default function PlayRecord() {
   };
   const updateNote = async (noteId: string, newText: string) => {
     try {
-      const response = await fetch(wifiIp + `:3000/note/editnote`, {
+      const response = await fetch(baseUrl + `/note/editnote`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +84,7 @@ export default function PlayRecord() {
   };
   const updateName = async (recordId: string, newName: string) => {
     try {
-      const response = await fetch(wifiIp + `:3000/record/changename`, {
+      const response = await fetch(baseUrl + `/record/changename`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -114,6 +120,7 @@ export default function PlayRecord() {
     );
   };
   const deleteNote = (id: string) => {
+    setMoreOption(false);
     Alert.alert(
       "Delete note",
       "Are you sure delete the note?",
@@ -139,7 +146,7 @@ export default function PlayRecord() {
 
   const fetchRecord = async () => {
     try {
-      const response = await fetch(wifiIp + `:3000/record/${recordId}`);
+      const response = await fetch(baseUrl + `/record/${recordId}`);
       const data = await response.json();
       if (response.ok) {
         setVideoUrl(data.record.url);
@@ -156,7 +163,7 @@ export default function PlayRecord() {
   };
   const fetchDeleteNote = async (noteId: string) => {
     try {
-      const response = await fetch(wifiIp + ":3000/note/deletenote", {
+      const response = await fetch(baseUrl + "/note/deletenote", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +177,7 @@ export default function PlayRecord() {
   };
   const fetchDeleteRecord = async (recordId: string) => {
     try {
-      const response = await fetch(wifiIp + ":3000/record/deleterecord", {
+      const response = await fetch(baseUrl + "/record/deleterecord", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -185,8 +192,20 @@ export default function PlayRecord() {
   };
 
   useEffect(() => {
-    fetchRecord();
+    const fetchData = async () => {
+      setIsLoading(true);
+      await fetchRecord();
+      setIsLoading(false);
+    };
+    fetchData();
   }, []);
+
+  if (isLoading)
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#0B963E" />
+      </View>
+    );
   return (
     <View className="flex-1">
       <View
