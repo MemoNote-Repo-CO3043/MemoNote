@@ -19,12 +19,8 @@ import NoteItem from "./components/NoteItem";
 import { Alert } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { isEqualIcon } from "react-native-paper/lib/typescript/components/Icon";
-<<<<<<< HEAD
-const wifiIp = "http://192.168.68.104";
-=======
 
 const baseUrl = "https://memonote.onrender.com";
->>>>>>> fafb06a48007fe57f0ba6e60f0be0e4fbfb08b0f
 export default function PlayRecord() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);

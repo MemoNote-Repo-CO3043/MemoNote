@@ -24,7 +24,6 @@ class UpdateNameDto {
 class CreateRecordDto {
   name: string;
   date: string;
-  userId: string;
   file: Express.Multer.File;
 }
 
@@ -41,8 +40,11 @@ export class RecordController {
   async saveRecord(
     @UploadedFile() file: Express.Multer.File,
     @Body() createRecordDto: CreateRecordDto,
+    @Headers('Authorization') token: string
   ): Promise<{ message: string; recordId?: string; error?: string }> {
-    const { name, date, userId } = createRecordDto;
+    const { name, date} = createRecordDto;
+    const decodedToken = jwt.decode(token.split(' ')[1]) as jwt.JwtPayload;
+    const userId = decodedToken?.id;
     const uniqueFileName = `video_${Date.now()}.mp4`;
     try {
       const fileUrl = await this.firebaseService.uploadFile(

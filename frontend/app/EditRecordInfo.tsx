@@ -3,8 +3,8 @@ import { Text, View, TextInput, TouchableOpacity, ActivityIndicator  } from "rea
 import React, { useState } from "react";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const userId = "J1z2TkzcLRs6Xqy66PIn";
 const baseUrl = "https://memonote.onrender.com";
 
 interface EditRecordInfoProps {
@@ -53,16 +53,17 @@ const EditRecordInfo: React.FC<EditRecordInfoProps> = ({
       type: "video/mp4",
       name: "video.mp4",
     };
+    const token = await AsyncStorage.getItem("token");
     formData.append("file", video);
     formData.append("name", name);
     formData.append("date", formattedDate);
-    formData.append("userId", userId);
 
     try {
       const response = await fetch(baseUrl + "/record/save_record", {
         method: "POST",
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });

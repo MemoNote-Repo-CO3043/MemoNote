@@ -360,6 +360,7 @@ export class FirebaseService {
         recordId,
         userId: userQuery.docs[0].id,
       });
+      batch.commit();
     } catch (error) {
       console.error('Error adding shared records:', error);
       throw new InternalServerErrorException('Failed to add shared records');
